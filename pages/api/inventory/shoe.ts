@@ -3,6 +3,7 @@ import prisma from '../../../lib/prisma';
 // FIX: Import enums from local types definition instead of @prisma/client.
 import { UserRole, WarehouseCategory, TransactionType } from '../../../types';
 import { WAREHOUSE_NAMES } from '../../../constants';
+import { PrismaClient } from '@prisma/client';
 
 const transferFlow: Partial<Record<WarehouseCategory, WarehouseCategory>> = {
     [WarehouseCategory.WIP]: WarehouseCategory.NEARLY_FINISHED,
@@ -13,7 +14,7 @@ export default protect(async (req, res) => {
     const { operation, itemId, shoe, quantity, warehouse, source, fromWarehouse, releasedTo, customerName, destination } = req.body;
 
     try {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: PrismaClient) => {
             switch (operation) {
                 case 'add':
                     const shoeMaster = await tx.shoeMaster.findUnique({ where: { shoeType: shoe.shoeType } });

@@ -68,7 +68,7 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
         setData(freshData);
     } catch(e) {
         console.error("Failed to reload data:", e);
-        if (e.message.includes('401')) {
+        if (e instanceof Error && e.message.includes('401')) {
             onLogout(); // If token is invalid, log out
         }
     }
