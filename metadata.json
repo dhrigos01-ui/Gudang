@@ -1,0 +1,5 @@
+{
+  "name": "Sistem Manajemen Gudang Sepatu",
+  "description": "Aplikasi web untuk mengelola stok sepatu di berbagai tahap gudang (jadi, 1/2 jadi, hampir jadi), serta melacak data masuk dan keluar barang.",
+  "requestFramePermissions": []
+}
