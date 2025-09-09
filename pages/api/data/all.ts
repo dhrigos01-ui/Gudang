@@ -1,6 +1,7 @@
 import { protect } from '../../../lib/auth';
 import prisma from '../../../lib/prisma';
 import { AppData, WarehouseCategory, InventoryItem, LeatherInventoryItem } from '../../../types';
+import { Transaction, Inventory, LeatherInventory } from '@prisma/client';
 
 export default protect(async (req, res) => {
     try {
@@ -30,7 +31,7 @@ export default protect(async (req, res) => {
                 [WarehouseCategory.NEARLY_FINISHED]: [],
                 [WarehouseCategory.LEATHER]: [],
             },
-            transactions: transactions.map(tx => ({
+            transactions: transactions.map((tx: Transaction) => ({
                 ...tx,
                 date: tx.date.toISOString(),
                 item: tx.shoeType ? { shoeType: tx.shoeType, size: tx.size } : { name: tx.leatherName },
@@ -40,17 +41,17 @@ export default protect(async (req, res) => {
             leatherMasters
         };
         
-        shoeInventory.forEach(item => {
+        shoeInventory.forEach((item: Inventory & { shoeMaster: { shoeType: string } }) => {
             const invItem: InventoryItem = {
                 id: item.id,
                 shoeType: item.shoeMaster.shoeType,
                 size: item.size,
                 quantity: item.quantity
             };
-            appData.inventory[item.warehouse].push(invItem);
+            (appData.inventory[item.warehouse as Exclude<WarehouseCategory, 'leather'>] as InventoryItem[]).push(invItem);
         });
 
-        appData.inventory[WarehouseCategory.LEATHER] = leatherInventory.map(item => ({
+        appData.inventory[WarehouseCategory.LEATHER] = leatherInventory.map((item: LeatherInventory & { leatherMaster: { name: string } }) => ({
             id: item.id,
             leatherMasterId: item.leatherMasterId,
             name: item.leatherMaster.name,
@@ -61,6 +62,6 @@ export default protect(async (req, res) => {
         res.status(200).json(appData);
     } catch (error) {
         console.error('Failed to fetch all data:', error);
-        res.status(500).json({ message: 'Failed to fetch all data', error: error.message });
+        res.status(500).json({ message: 'Failed to fetch all data', error: error instanceof Error ? error.message : 'Unknown error' });
     }
 }, ['GET']);

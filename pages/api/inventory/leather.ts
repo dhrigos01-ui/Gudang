@@ -2,12 +2,13 @@ import { protect } from '../../../lib/auth';
 import prisma from '../../../lib/prisma';
 // FIX: Import enums from local types definition instead of @prisma/client.
 import { UserRole, WarehouseCategory, TransactionType } from '../../../types';
+import { PrismaClient } from '@prisma/client';
 
 export default protect(async (req, res) => {
     const { operation, itemId, leatherMasterId, quantity, supplier, returneeName, notes, releasedTo } = req.body;
 
     try {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: PrismaClient) => {
             const leatherMaster = await tx.leatherMaster.findUnique({ where: { id: leatherMasterId } });
             
             switch (operation) {

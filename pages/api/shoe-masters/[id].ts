@@ -13,7 +13,7 @@ export default protect(async (req, res) => {
             return;
         }
         // FIX: Add explicit types to sort function arguments to avoid potential type errors.
-        const sizes = [...new Set(sizesStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter((n: number) => !isNaN(n) && n > 0))].sort((a: number,b: number) => a-b);
+        const sizes = [...new Set(sizesStr.split(',').map((s: string) => parseInt(s.trim(), 10)).filter((n: number) => !isNaN(n) && n > 0))].sort((a, b) => (a as number) - (b as number));
         if (sizes.length === 0) {
             res.status(400).json({ message: "Harap masukkan setidaknya satu nomor ukuran yang valid." });
             return;

@@ -2,6 +2,7 @@ import { protect } from '../../../../lib/auth';
 import prisma from '../../../../lib/prisma';
 // FIX: Import enums from local types definition instead of @prisma/client.
 import { UserRole, TransactionType, WarehouseCategory } from '../../../../types';
+import { PrismaClient } from '@prisma/client';
 
 export default protect(async (req, res) => {
     const { id } = req.query;
@@ -14,7 +15,7 @@ export default protect(async (req, res) => {
         }
 
         try {
-            await prisma.$transaction(async (tx) => {
+            await prisma.$transaction(async (tx: PrismaClient) => {
                 const item = await tx.leatherInventory.findUnique({ where: { id: String(id) }, include: { leatherMaster: true } });
                 if (!item) throw new Error("Stok kulit tidak ditemukan.");
                 
@@ -47,7 +48,7 @@ export default protect(async (req, res) => {
 
     if (req.method === 'DELETE') {
         try {
-            await prisma.$transaction(async (tx) => {
+            await prisma.$transaction(async (tx: PrismaClient) => {
                 const item = await tx.leatherInventory.findUnique({ where: { id: String(id) }, include: { leatherMaster: true }});
                 if (!item) throw new Error("Stok kulit tidak ditemukan.");
 
