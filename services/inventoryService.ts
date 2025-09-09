@@ -1,14 +1,21 @@
-import { AppData, InventoryItem, Shoe, Transaction, TransactionType, WarehouseCategory, ShoeMaster, MaklunMaster, LeatherMaster, LeatherInventoryItem } from '../types';
+import { AppData, InventoryItem, Shoe, Transaction, TransactionType, WarehouseCategory, ShoeMaster, MaklunMaster, LeatherMaster, LeatherInventoryItem, User, UserRole } from '../types';
 import { WAREHOUSE_NAMES } from '../constants';
 
 // Deklarasi global untuk sql.js
 declare const initSqlJs: (config: { locateFile: (file: string) => string }) => Promise<any>;
 
-const DB_KEY = 'shoeWarehouseDB_sqlite_v3'; // Version bump for new schema
+const DB_KEY = 'shoeWarehouseDB_sqlite_v4'; // Version bump for new schema
 let db: any = null;
 
 const createSchema = () => {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL, -- In a real app, this should be a hash
+      role TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS shoe_masters (
       id TEXT PRIMARY KEY,
       shoe_type TEXT NOT NULL UNIQUE,
@@ -59,6 +66,19 @@ const createSchema = () => {
       notes TEXT
     );
   `);
+  // Seed default users if users table is empty
+  const userCount = db.exec("SELECT COUNT(*) FROM users");
+  if (userCount[0].values[0][0] === 0) {
+    console.log("Seeding default users...");
+    // Admin user
+    db.run("INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)", [
+      crypto.randomUUID(), 'admin', 'admin', UserRole.ADMIN
+    ]);
+    // Regular user
+    db.run("INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)", [
+      crypto.randomUUID(), 'user', 'user', UserRole.USER
+    ]);
+  }
 };
 
 export const initDB = async (): Promise<void> => {
@@ -90,6 +110,24 @@ const persistDB = () => {
     console.error("Failed to save database to localStorage", error);
   }
 };
+
+// --- AUTHENTICATION ---
+export const login = (username: string, password: string): User | null => {
+    if (!db) throw new Error("Database not initialized");
+    // NOTE: This is plain text password comparison. In a real-world app, use a hashing library like bcrypt.
+    const stmt = db.prepare("SELECT id, username, role FROM users WHERE username = :username AND password = :password");
+    stmt.bind({ ':username': username, ':password': password });
+    
+    if (stmt.step()) {
+        const user = stmt.getAsObject() as { id: string; username: string; role: UserRole };
+        stmt.free();
+        return user;
+    }
+    
+    stmt.free();
+    return null;
+}
+
 
 export const getData = (): AppData => {
   if (!db) throw new Error("Database not initialized");

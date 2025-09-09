@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from './Card';
-import { ShoeMaster, AppData } from '../types';
+import { ShoeMaster, AppData, User, UserRole } from '../types';
 import * as inventoryService from '../services/inventoryService';
 import { PlusIcon } from './icons/PlusIcon';
 import { PencilIcon } from './icons/PencilIcon';
@@ -10,14 +10,16 @@ interface ShoeMasterPageProps {
   shoeMasters: ShoeMaster[];
   inventory: AppData['inventory'];
   onDataChanged: () => void;
+  currentUser: User;
 }
 
-export const ShoeMasterPage: React.FC<ShoeMasterPageProps> = ({ shoeMasters, inventory, onDataChanged }) => {
+export const ShoeMasterPage: React.FC<ShoeMasterPageProps> = ({ shoeMasters, inventory, onDataChanged, currentUser }) => {
   const [shoeType, setShoeType] = useState('');
   const [sizes, setSizes] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const isAdmin = currentUser.role === UserRole.ADMIN;
 
   useEffect(() => {
     if (success || error) {
@@ -86,47 +88,49 @@ export const ShoeMasterPage: React.FC<ShoeMasterPageProps> = ({ shoeMasters, inv
         <h2 className="text-3xl font-bold tracking-tight text-white mb-6">Manajemen Master Data Sepatu</h2>
         <Card>
             <div className="space-y-6">
-                <form onSubmit={handleSubmit} className="space-y-4 p-4 border border-slate-700 rounded-lg bg-slate-900/50">
-                <h4 className="text-md font-semibold text-white mb-2">{editingId ? 'Edit Tipe Sepatu' : 'Tambah Tipe Sepatu Baru'}</h4>
-                <div>
-                    <label htmlFor="newShoeType" className="block text-sm font-medium text-slate-300">Nama Tipe Sepatu</label>
-                    <input 
-                    type="text" 
-                    id="newShoeType" 
-                    value={shoeType} 
-                    onChange={(e) => setShoeType(e.target.value)} 
-                    className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" 
-                    placeholder="Contoh: Running Pro Max"
-                    required 
-                    />
-                </div>
-                <div>
-                    <label htmlFor="newSizes" className="block text-sm font-medium text-slate-300">Ukuran Tersedia (pisahkan dengan koma)</label>
-                    <input 
-                    type="text" 
-                    id="newSizes" 
-                    value={sizes} 
-                    onChange={(e) => setSizes(e.target.value)} 
-                    className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                    placeholder="Contoh: 39, 40, 41, 42, 43" 
-                    required 
-                    />
-                </div>
-                
-                {error && <p className="text-red-400 text-sm">{error}</p>}
-                {success && <p className="text-green-400 text-sm">{success}</p>}
+                {isAdmin && (
+                    <form onSubmit={handleSubmit} className="space-y-4 p-4 border border-slate-700 rounded-lg bg-slate-900/50">
+                    <h4 className="text-md font-semibold text-white mb-2">{editingId ? 'Edit Tipe Sepatu' : 'Tambah Tipe Sepatu Baru'}</h4>
+                    <div>
+                        <label htmlFor="newShoeType" className="block text-sm font-medium text-slate-300">Nama Tipe Sepatu</label>
+                        <input 
+                        type="text" 
+                        id="newShoeType" 
+                        value={shoeType} 
+                        onChange={(e) => setShoeType(e.target.value)} 
+                        className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" 
+                        placeholder="Contoh: Running Pro Max"
+                        required 
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="newSizes" className="block text-sm font-medium text-slate-300">Ukuran Tersedia (pisahkan dengan koma)</label>
+                        <input 
+                        type="text" 
+                        id="newSizes" 
+                        value={sizes} 
+                        onChange={(e) => setSizes(e.target.value)} 
+                        className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                        placeholder="Contoh: 39, 40, 41, 42, 43" 
+                        required 
+                        />
+                    </div>
+                    
+                    {error && <p className="text-red-400 text-sm">{error}</p>}
+                    {success && <p className="text-green-400 text-sm">{success}</p>}
 
-                <div className="flex justify-end gap-2">
-                    {editingId && (
-                    <button type="button" onClick={resetForm} className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-600 hover:bg-slate-500 rounded-md">
-                        Batal Edit
-                    </button>
-                    )}
-                    <button type="submit" className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-600 rounded-md min-w-[150px]">
-                        {editingId ? 'Update Master' : <><PlusIcon className="h-5 w-5" /> Tambah Master</>}
-                    </button>
-                </div>
-                </form>
+                    <div className="flex justify-end gap-2">
+                        {editingId && (
+                        <button type="button" onClick={resetForm} className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-600 hover:bg-slate-500 rounded-md">
+                            Batal Edit
+                        </button>
+                        )}
+                        <button type="submit" className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-600 rounded-md min-w-[150px]">
+                            {editingId ? 'Update Master' : <><PlusIcon className="h-5 w-5" /> Tambah Master</>}
+                        </button>
+                    </div>
+                    </form>
+                )}
 
                 <div>
                 <h4 className="text-md font-semibold text-white mb-2">Daftar Master Sepatu</h4>
@@ -138,19 +142,21 @@ export const ShoeMasterPage: React.FC<ShoeMasterPageProps> = ({ shoeMasters, inv
                             <p className="font-semibold text-white">{master.shoeType}</p>
                             <p className="text-sm text-slate-400">Ukuran: {master.sizes.join(', ')}</p>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => handleEditClick(master)} className="p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-slate-600" title="Edit">
-                            <PencilIcon className="h-5 w-5" />
-                            </button>
-                            <button 
-                            onClick={() => handleDeleteClick(master)} 
-                            className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-600 disabled:text-slate-600 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                            disabled={isShoeTypeInUse(master.shoeType)}
-                            title={isShoeTypeInUse(master.shoeType) ? "Tidak bisa dihapus karena stok masih ada" : "Hapus"}
-                            >
-                            <TrashIcon className="h-5 w-5" />
-                            </button>
-                        </div>
+                        {isAdmin && (
+                            <div className="flex gap-2">
+                                <button onClick={() => handleEditClick(master)} className="p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-slate-600" title="Edit">
+                                <PencilIcon className="h-5 w-5" />
+                                </button>
+                                <button 
+                                onClick={() => handleDeleteClick(master)} 
+                                className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-600 disabled:text-slate-600 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                disabled={isShoeTypeInUse(master.shoeType)}
+                                title={isShoeTypeInUse(master.shoeType) ? "Tidak bisa dihapus karena stok masih ada" : "Hapus"}
+                                >
+                                <TrashIcon className="h-5 w-5" />
+                                </button>
+                            </div>
+                        )}
                         </div>
                     ))
                     ) : (

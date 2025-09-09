@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { AppData, InventoryItem, Page, LeatherInventoryItem } from './types';
-import { WarehouseCategory } from './types';
+// FIX: Moved `UserRole` from a type-only import to a value import because it's used for runtime checks.
+import type { AppData, InventoryItem, Page, LeatherInventoryItem, User } from './types';
+import { WarehouseCategory, UserRole } from './types';
 import * as inventoryService from './services/inventoryService';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -18,6 +19,7 @@ import { LeatherWarehouseView } from './components/LeatherWarehouseView';
 import { ReturnLeatherModal } from './components/ReturnLeatherModal';
 import { EditShoeStockModal } from './components/EditShoeStockModal';
 import { EditLeatherStockModal } from './components/EditLeatherStockModal';
+import { LoginPage } from './components/LoginPage';
 
 
 const LoadingScreen: React.FC = () => (
@@ -49,6 +51,8 @@ export default function App() {
   const [data, setData] = useState<AppData>(initialAppData);
   const [page, setPage] = useState<Page>('dashboard');
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
   const [isStockInModalOpen, setIsStockInModalOpen] = useState(false);
   const [isStockOutModalOpen, setIsStockOutModalOpen] = useState(false);
   const [isStockOutGeneralModalOpen, setIsStockOutGeneralModalOpen] = useState(false);
@@ -70,16 +74,31 @@ export default function App() {
         setData(freshData);
     } catch(e) {
         console.error("Failed to reload data:", e);
-        // Bisa ditambahkan state untuk error UI
     }
   }, []);
 
   useEffect(() => {
     inventoryService.initDB().then(() => {
+      // Check for logged in user in session storage
+      const loggedInUser = sessionStorage.getItem('currentUser');
+      if (loggedInUser) {
+          setCurrentUser(JSON.parse(loggedInUser));
+      }
       reloadData();
       setIsLoading(false);
     });
   }, [reloadData]);
+
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    sessionStorage.removeItem('currentUser');
+    setPage('dashboard');
+  };
 
   const handleSellRequest = (item: InventoryItem) => {
     setItemToSell(item);
@@ -122,23 +141,33 @@ export default function App() {
     return <LoadingScreen />;
   }
   
+  if (!currentUser) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+  
   const renderPage = () => {
+    // Security check: Redirect non-admins from master pages
+    if (currentUser.role === UserRole.USER && ['master_shoe', 'master_leather', 'master_maklun'].includes(page)) {
+      return <Dashboard inventory={data.inventory} setPage={setPage} />;
+    }
+
     switch (page) {
       case 'dashboard':
         return <Dashboard inventory={data.inventory} setPage={setPage} />;
       case 'transactions':
         return <TransactionHistory transactions={data.transactions} />;
       case 'master_shoe':
-        return <ShoeMasterPage shoeMasters={data.shoeMasters} inventory={data.inventory} onDataChanged={reloadData} />;
+        return <ShoeMasterPage shoeMasters={data.shoeMasters} inventory={data.inventory} onDataChanged={reloadData} currentUser={currentUser}/>;
       case 'master_leather':
-        return <LeatherMasterPage leatherMasters={data.leatherMasters} leatherInventory={data.inventory.leather} onDataChanged={reloadData} />;
+        return <LeatherMasterPage leatherMasters={data.leatherMasters} leatherInventory={data.inventory.leather} onDataChanged={reloadData} currentUser={currentUser} />;
       case 'master_maklun':
-        return <MaklunMasterPage maklunMasters={data.maklunMasters} transactions={data.transactions} onDataChanged={reloadData} />;
+        return <MaklunMasterPage maklunMasters={data.maklunMasters} transactions={data.transactions} onDataChanged={reloadData} currentUser={currentUser} />;
       case WarehouseCategory.LEATHER:
         return <LeatherWarehouseView 
                  items={data.inventory[WarehouseCategory.LEATHER]} 
                  onEditRequest={handleEditLeatherStockRequest}
                  onDeleteRequest={handleDeleteLeatherStockRequest}
+                 currentUser={currentUser}
                />;
       default:
         const warehouseCat = page as Exclude<WarehouseCategory, WarehouseCategory.LEATHER>;
@@ -148,6 +177,7 @@ export default function App() {
                  onSellRequest={handleSellRequest}
                  onEditRequest={handleEditShoeStockRequest}
                  onDeleteRequest={handleDeleteShoeStockRequest}
+                 currentUser={currentUser}
                />;
     }
   };
@@ -162,6 +192,8 @@ export default function App() {
         onRemoveStock={() => setIsStockOutGeneralModalOpen(true)}
         onOpenTransfer={() => setIsTransferModalOpen(true)}
         onReturnLeather={() => setIsReturnLeatherModalOpen(true)}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         {renderPage()}

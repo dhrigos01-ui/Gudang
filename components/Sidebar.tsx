@@ -1,5 +1,5 @@
 import React from 'react';
-import { type Page, WarehouseCategory } from '../types';
+import { type Page, WarehouseCategory, User, UserRole } from '../types';
 import { ShoeIcon } from './icons/ShoeIcon';
 import { PlusIcon } from './icons/PlusIcon';
 import { ArrowLeftOnRectangleIcon } from './icons/ArrowLeftOnRectangleIcon';
@@ -17,13 +17,19 @@ interface SidebarProps {
   onRemoveStock: () => void;
   onOpenTransfer: () => void;
   onReturnLeather: () => void;
+  currentUser: User;
+  onLogout: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
     activePage, setPage, onAddStock, onAddLeather, onRemoveStock, 
     onOpenTransfer,
-    onReturnLeather
+    onReturnLeather,
+    currentUser,
+    onLogout
 }) => {
+  const isAdmin = currentUser.role === UserRole.ADMIN;
+
   const mainNavItems: { id: Page; label: string }[] = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: WarehouseCategory.FINISHED_GOODS, label: 'Stok Gudang' },
@@ -73,22 +79,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <p className="px-2 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</p>
         {mainNavItems.map(item => renderNavButton(item))}
         
-        <p className="px-2 pt-4 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Master Data</p>
-        {masterNavItems.map(item => renderNavButton(item))}
+        {isAdmin && (
+            <>
+                <p className="px-2 pt-4 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Master Data</p>
+                {masterNavItems.map(item => renderNavButton(item))}
+            </>
+        )}
       </nav>
-
+      
       <div className="p-2 border-t border-slate-700 space-y-2">
-         <p className="px-2 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Aksi</p>
-        {actionItems.map((action) => (
-             <button
-              key={action.label}
-              onClick={action.onClick}
-              className={`w-full flex items-center justify-start gap-3 ${action.className} text-white font-bold py-2 px-4 rounded-lg transition-transform duration-200 transform hover:scale-105 shadow-md`}
+        {isAdmin && (
+            <>
+                <p className="px-2 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Aksi</p>
+                {actionItems.map((action) => (
+                    <button
+                        key={action.label}
+                        onClick={action.onClick}
+                        className={`w-full flex items-center justify-start gap-3 ${action.className} text-white font-bold py-2 px-4 rounded-lg transition-transform duration-200 transform hover:scale-105 shadow-md`}
+                    >
+                        {action.icon}
+                        <span className="text-sm">{action.label}</span>
+                    </button>
+                ))}
+            </>
+        )}
+        <div className="p-2 mt-auto">
+            <p className="text-sm text-slate-400">Login sebagai: <span className="font-bold text-white">{currentUser.username} ({currentUser.role})</span></p>
+            <button
+                onClick={onLogout}
+                className="w-full mt-2 text-left px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center text-slate-300 hover:bg-slate-700 hover:text-white"
             >
-              {action.icon}
-              <span className="text-sm">{action.label}</span>
+                <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-3 transform rotate-180" />
+                Logout
             </button>
-        ))}
+        </div>
       </div>
     </aside>
   );

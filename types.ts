@@ -69,3 +69,14 @@ export interface AppData {
 }
 
 export type Page = WarehouseCategory | 'dashboard' | 'transactions' | 'master_shoe' | 'master_leather' | 'master_maklun';
+
+export enum UserRole {
+    ADMIN = 'ADMIN',
+    USER = 'USER',
+}
+
+export interface User {
+    id: string;
+    username: string;
+    role: UserRole;
+}
