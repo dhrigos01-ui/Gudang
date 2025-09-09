@@ -2,20 +2,18 @@ import React, { useMemo, useState } from 'react';
 import { InventoryItem, User, UserRole, WarehouseCategory } from '../types';
 import { WAREHOUSE_NAMES } from '../constants';
 import { Card } from './Card';
-import { TagIcon } from './icons/TagIcon';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
 
 interface WarehouseViewProps {
   category: WarehouseCategory;
   items: InventoryItem[];
-  onSellRequest: (item: InventoryItem) => void;
   onEditRequest: (item: InventoryItem) => void;
   onDeleteRequest: (item: InventoryItem) => void;
   currentUser: User;
 }
 
-export const WarehouseView: React.FC<WarehouseViewProps> = ({ category, items, onSellRequest, onEditRequest, onDeleteRequest, currentUser }) => {
+export const WarehouseView: React.FC<WarehouseViewProps> = ({ category, items, onEditRequest, onDeleteRequest, currentUser }) => {
   const [filter, setFilter] = useState('');
   const isAdmin = currentUser.role === UserRole.ADMIN;
 
@@ -91,16 +89,6 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ category, items, o
                     {isAdmin && (
                         <td className="px-6 py-4 whitespace-nowrap text-center align-middle">
                         <div className="flex justify-center items-center gap-2">
-                            {category === WarehouseCategory.FINISHED_GOODS && (
-                            <button
-                                onClick={() => onSellRequest(item)}
-                                className="inline-flex items-center justify-center gap-1 text-sm bg-cyan-600/50 text-cyan-300 hover:bg-cyan-600 hover:text-white transition-colors rounded px-3 py-1"
-                                title="Jual"
-                            >
-                                <TagIcon className="h-4 w-4" />
-                                <span className="hidden sm:inline">Jual</span>
-                            </button>
-                            )}
                             <button 
                             onClick={() => onEditRequest(item)} 
                             className="p-2 text-slate-400 hover:text-amber-300 transition-colors rounded-full hover:bg-slate-600" title="Edit/Penyesuaian Stok">

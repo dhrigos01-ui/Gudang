@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { LeatherMaster } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 
 interface StockInLeatherModalProps {
   onClose: () => void;
@@ -15,7 +16,7 @@ export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClos
   const [supplier, setSupplier] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const quantityNum = parseInt(quantity, 10);
@@ -31,7 +32,9 @@ export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClos
     }
     
     try {
-      inventoryService.addLeatherStock(selectedLeather, quantityNum, supplier.trim());
+      // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+      // Pass the leather master ID instead of the full object.
+      await api.addLeatherStock(selectedLeather.id, quantityNum, supplier.trim());
       onStockAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');

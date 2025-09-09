@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const actionItems = [
-    { label: 'Transfer Stok', onClick: onOpenTransfer, icon: <ArrowPathIcon className="h-5 w-5" />, className: 'bg-indigo-500 hover:bg-indigo-600' },
+    { label: 'Penjualan Barang', onClick: onOpenTransfer, icon: <ArrowPathIcon className="h-5 w-5" />, className: 'bg-green-500 hover:bg-green-600' },
     { label: 'Retur Kulit', onClick: onReturnLeather, icon: <ArrowUturnLeftIcon className="h-5 w-5" />, className: 'bg-orange-500 hover:bg-orange-600' },
     { label: 'Barang Keluar', onClick: onRemoveStock, icon: <ArrowLeftOnRectangleIcon className="h-5 w-5" />, className: 'bg-amber-500 hover:bg-amber-600' },
     { label: 'Tambah Stok Sepatu', onClick: onAddStock, icon: <PlusIcon className="h-5 w-5" />, className: 'bg-cyan-500 hover:bg-cyan-600' },

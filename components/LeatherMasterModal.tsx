@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { LeatherMaster, LeatherInventoryItem } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 import { PlusIcon } from './icons/PlusIcon';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
@@ -43,10 +44,11 @@ export const LeatherMasterModal: React.FC<LeatherMasterModalProps> = ({ leatherM
     document.getElementById('newLeatherName')?.focus();
   };
 
-  const handleDeleteClick = (master: LeatherMaster) => {
+  const handleDeleteClick = async (master: LeatherMaster) => {
     if (window.confirm(`Apakah Anda yakin ingin menghapus jenis kulit "${master.name}"?`)) {
       try {
-        inventoryService.deleteLeatherMaster(master.id);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.deleteLeatherMaster(master.id);
         setSuccess(`"${master.name}" berhasil dihapus.`);
         onDataChanged();
       } catch (err) {
@@ -55,17 +57,19 @@ export const LeatherMasterModal: React.FC<LeatherMasterModalProps> = ({ leatherM
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
     try {
       if (editingId) {
-        inventoryService.updateLeatherMaster(editingId, name);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.updateLeatherMaster(editingId, name);
         setSuccess(`"${name}" berhasil diperbarui.`);
       } else {
-        inventoryService.addLeatherMaster(name);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.addLeatherMaster(name);
         setSuccess(`"${name}" berhasil ditambahkan.`);
       }
       onDataChanged();

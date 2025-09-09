@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { User } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 import { ShoeIcon } from './icons/ShoeIcon';
 import { UserCircleIcon } from './icons/UserCircleIcon';
 
 interface LoginPageProps {
-  onLoginSuccess: (user: User) => void;
+  // FIX: Update signature to accept token and user object on successful login.
+  onLoginSuccess: (token: string, user: User) => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
@@ -14,25 +16,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-        try {
-            const user = inventoryService.login(username, password);
-            if (user) {
-                onLoginSuccess(user);
-            } else {
-                setError('Username atau password salah.');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat login.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, 500); // Simulate network delay
+    try {
+      // FIX: Use async API call for login and handle response with token and user.
+      const { token, user } = await api.login(username, password);
+      if (user && token) {
+        onLoginSuccess(token, user);
+      } else {
+        setError('Username atau password salah.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat login.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -77,13 +78,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
           
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-          
-          <div className="text-xs text-slate-500 text-center space-y-1">
-              <p>Admin: <span className="font-mono">admin</span> / <span className="font-mono">admin</span></p>
-              <p>User Biasa: <span className="font-mono">user</span> / <span className="font-mono">user</span></p>
-          </div>
-
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}                   
           <div>
             <button
               type="submit"

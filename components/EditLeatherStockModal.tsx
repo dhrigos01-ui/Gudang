@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { LeatherInventoryItem } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 
 interface EditLeatherStockModalProps {
   item: LeatherInventoryItem;
@@ -13,7 +14,7 @@ export const EditLeatherStockModal: React.FC<EditLeatherStockModalProps> = ({ it
   const [quantity, setQuantity] = useState(String(item.quantity));
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const quantityNum = parseInt(quantity, 10);
@@ -24,7 +25,8 @@ export const EditLeatherStockModal: React.FC<EditLeatherStockModalProps> = ({ it
     }
     
     try {
-      inventoryService.updateLeatherStockQuantity(item.id, quantityNum);
+      // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+      await api.updateLeatherStockQuantity(item.id, quantityNum);
       onStockUpdated();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');

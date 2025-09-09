@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Modal } from './Modal';
 // FIX: Use LeatherMaster type as MaterialMaster does not exist.
 import { LeatherMaster, MaklunMaster } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 
 interface StockInMaterialModalProps {
   onClose: () => void;
@@ -19,7 +20,7 @@ export const StockInMaterialModal: React.FC<StockInMaterialModalProps> = ({ onCl
   const [sourceName, setSourceName] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const quantityNum = parseInt(quantity, 10);
@@ -36,8 +37,8 @@ export const StockInMaterialModal: React.FC<StockInMaterialModalProps> = ({ onCl
     
     try {
       const source = sourceType === 'maklun' ? sourceName.trim() : 'Pabrik';
-      // FIX: Call addLeatherStock as addMaterialStock does not exist.
-      inventoryService.addLeatherStock(selectedLeather, quantityNum, source);
+      // FIX: Call addLeatherStock as addMaterialStock does not exist, and pass master ID.
+      await api.addLeatherStock(selectedLeather.id, quantityNum, source);
       onStockAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');

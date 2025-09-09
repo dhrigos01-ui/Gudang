@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- ENUMS ---
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum WarehouseCategory {
+  finished_goods
+  wip
+  nearly_finished
+  leather
+}
+
+enum TransactionType {
+  IN
+  OUT
+}
+
+
+// --- MODELS ---
+
+model User {
+  id       String   @id @default(uuid())
+  username String   @unique
+  password String // Hashed password
+  role     UserRole @default(USER)
+}
+
+model ShoeMaster {
+  id        String      @id @default(uuid())
+  shoeType  String      @unique @map("shoe_type")
+  sizes     Int[]
+  inventory Inventory[]
+}
+
+model MaklunMaster {
+  id   String @id @default(uuid())
+  name String @unique
+}
+
+model LeatherMaster {
+  id        String             @id @default(uuid())
+  name      String             @unique
+  inventory LeatherInventory[]
+}
+
+model Inventory {
+  id           String            @id @default(uuid())
+  shoeMasterId String            @map("shoe_master_id")
+  shoeMaster   ShoeMaster        @relation(fields: [shoeMasterId], references: [id], onDelete: Cascade)
+  size         Int
+  quantity     Int
+  warehouse    WarehouseCategory
+
+  @@unique([shoeMasterId, size, warehouse])
+  @@index([shoeMasterId])
+}
+
+model LeatherInventory {
+  id              String        @id @default(uuid())
+  leatherMasterId String        @map("leather_master_id")
+  leatherMaster   LeatherMaster @relation(fields: [leatherMasterId], references: [id], onDelete: Cascade)
+  supplier        String
+  quantity        Float // Menggunakan Float untuk 'kaki'
+
+  @@unique([leatherMasterId, supplier])
+  @@index([leatherMasterId])
+}
+
+model Transaction {
+  id          String            @id @default(uuid())
+  date        DateTime          @default(now())
+  type        TransactionType
+  shoeType    String?           @map("shoe_type")
+  size        Int?
+  leatherName String?           @map("leather_name")
+  quantity    Float
+  warehouse   WarehouseCategory
+  source      String?
+  notes       String?
+}

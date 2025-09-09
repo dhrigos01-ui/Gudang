@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from './Card';
 import { ShoeMaster, AppData, User, UserRole } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 import { PlusIcon } from './icons/PlusIcon';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
@@ -47,10 +48,11 @@ export const ShoeMasterPage: React.FC<ShoeMasterPageProps> = ({ shoeMasters, inv
     document.getElementById('newShoeType')?.focus();
   };
 
-  const handleDeleteClick = (master: ShoeMaster) => {
+  const handleDeleteClick = async (master: ShoeMaster) => {
     if (window.confirm(`Apakah Anda yakin ingin menghapus tipe sepatu "${master.shoeType}"?`)) {
       try {
-        inventoryService.deleteShoeMaster(master.id);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.deleteShoeMaster(master.id);
         setSuccess(`"${master.shoeType}" berhasil dihapus.`);
         onDataChanged();
       } catch (err) {
@@ -59,17 +61,19 @@ export const ShoeMasterPage: React.FC<ShoeMasterPageProps> = ({ shoeMasters, inv
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
     try {
       if (editingId) {
-        inventoryService.updateShoeMaster(editingId, shoeType, sizes);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.updateShoeMaster(editingId, shoeType, sizes);
         setSuccess(`"${shoeType}" berhasil diperbarui.`);
       } else {
-        inventoryService.addShoeMaster(shoeType, sizes);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.addShoeMaster(shoeType, sizes);
         setSuccess(`"${shoeType}" berhasil ditambahkan.`);
       }
       onDataChanged();

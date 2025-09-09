@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { MaklunMaster, Transaction } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 import { PlusIcon } from './icons/PlusIcon';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
@@ -43,10 +44,11 @@ export const MaklunMasterModal: React.FC<MaklunMasterModalProps> = ({ maklunMast
     document.getElementById('newMaklunName')?.focus();
   };
 
-  const handleDeleteClick = (master: MaklunMaster) => {
+  const handleDeleteClick = async (master: MaklunMaster) => {
     if (window.confirm(`Apakah Anda yakin ingin menghapus sumber maklun "${master.name}"?`)) {
       try {
-        inventoryService.deleteMaklunMaster(master.id);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.deleteMaklunMaster(master.id);
         setSuccess(`"${master.name}" berhasil dihapus.`);
         onDataChanged();
       } catch (err) {
@@ -55,17 +57,19 @@ export const MaklunMasterModal: React.FC<MaklunMasterModalProps> = ({ maklunMast
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
     try {
       if (editingId) {
-        inventoryService.updateMaklunMaster(editingId, name);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.updateMaklunMaster(editingId, name);
         setSuccess(`"${name}" berhasil diperbarui.`);
       } else {
-        inventoryService.addMaklunMaster(name);
+        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+        await api.addMaklunMaster(name);
         setSuccess(`"${name}" berhasil ditambahkan.`);
       }
       onDataChanged();

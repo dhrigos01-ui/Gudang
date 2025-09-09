@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 // FIX: Use LeatherMaster and LeatherInventoryItem types as MaterialMaster and MaterialInventoryItem do not exist.
 import { LeatherMaster, LeatherInventoryItem } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 import { PlusIcon } from './icons/PlusIcon';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
@@ -45,11 +46,11 @@ export const MaterialMasterModal: React.FC<MaterialMasterModalProps> = ({ leathe
     document.getElementById('newLeatherName')?.focus();
   };
 
-  const handleDeleteClick = (master: LeatherMaster) => {
+  const handleDeleteClick = async (master: LeatherMaster) => {
     if (window.confirm(`Apakah Anda yakin ingin menghapus jenis kulit "${master.name}"?`)) {
       try {
         // FIX: Call deleteLeatherMaster as deleteMaterialMaster does not exist.
-        inventoryService.deleteLeatherMaster(master.id);
+        await api.deleteLeatherMaster(master.id);
         setSuccess(`"${master.name}" berhasil dihapus.`);
         onDataChanged();
       } catch (err) {
@@ -58,7 +59,7 @@ export const MaterialMasterModal: React.FC<MaterialMasterModalProps> = ({ leathe
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -66,11 +67,11 @@ export const MaterialMasterModal: React.FC<MaterialMasterModalProps> = ({ leathe
     try {
       if (editingId) {
         // FIX: Call updateLeatherMaster as updateMaterialMaster does not exist.
-        inventoryService.updateLeatherMaster(editingId, name);
+        await api.updateLeatherMaster(editingId, name);
         setSuccess(`"${name}" berhasil diperbarui.`);
       } else {
         // FIX: Call addLeatherMaster as addMaterialMaster does not exist.
-        inventoryService.addLeatherMaster(name);
+        await api.addLeatherMaster(name);
         setSuccess(`"${name}" berhasil ditambahkan.`);
       }
       onDataChanged();

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Modal } from './Modal';
 import { WarehouseCategory, ShoeMaster, MaklunMaster } from '../types';
 import { WAREHOUSE_NAMES } from '../constants';
-import * as inventoryService from '../services/inventoryService';
+import * as api from '../lib/api';
 
 interface StockInModalProps {
   onClose: () => void;
@@ -19,6 +19,7 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
   const [sourceType, setSourceType] = useState<'pabrik' | 'maklun'>('pabrik');
   const [sourceName, setSourceName] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const availableSizes = useMemo(() => {
     const master = shoeMasters.find(m => m.shoeType === selectedShoeType);
@@ -30,27 +31,32 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
     setSelectedSize(''); // Reset size selection when shoe type changes
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     const quantityNum = parseInt(quantity, 10);
     const sizeNum = parseInt(selectedSize, 10);
 
     if (!selectedShoeType || !selectedSize || isNaN(quantityNum) || quantityNum <= 0) {
       setError('Semua field harus diisi dengan nilai yang valid.');
+      setIsLoading(false);
       return;
     }
     if (sourceType === 'maklun' && !sourceName.trim()) {
       setError('Nama sumber Maklun harus dipilih.');
+      setIsLoading(false);
       return;
     }
     
     try {
       const source = sourceType === 'maklun' ? sourceName.trim() : 'Pabrik';
-      inventoryService.addStock({ shoeType: selectedShoeType, size: sizeNum }, quantityNum, warehouse, source);
+      await api.addStock({ shoeType: selectedShoeType, size: sizeNum }, quantityNum, warehouse, source);
       onStockAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -97,8 +103,8 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
         <div>
           <label htmlFor="warehouse" className="block text-sm font-medium text-slate-300">Masukkan ke Gudang</label>
           <select id="warehouse" value={warehouse} onChange={(e) => setWarehouse(e.target.value as WarehouseCategory)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
-            {Object.entries(WAREHOUSE_NAMES).map(([key, name]) => (
-              <option key={key} value={key}>{name}</option>
+            {Object.values(WarehouseCategory).filter(v => v !== 'leather').map(key => (
+              <option key={key} value={key}>{WAREHOUSE_NAMES[key]}</option>
             ))}
           </select>
         </div>
@@ -151,7 +157,9 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
 
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-600 hover:bg-slate-500 rounded-md">Batal</button>
-          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-600 rounded-md" disabled={!shoeMasters || shoeMasters.length === 0 || (sourceType === 'maklun' && maklunMasters.length === 0)}>Simpan</button>
+          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-600 rounded-md" disabled={isLoading || !shoeMasters || shoeMasters.length === 0 || (sourceType === 'maklun' && maklunMasters.length === 0)}>
+            {isLoading ? 'Menyimpan...' : 'Simpan'}
+          </button>
         </div>
       </form>
     </Modal>

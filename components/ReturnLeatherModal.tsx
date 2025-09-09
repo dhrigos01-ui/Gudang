@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { LeatherMaster } from '../types';
-import * as inventoryService from '../services/inventoryService';
+// FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+import * as api from '../lib/api';
 
 interface ReturnLeatherModalProps {
   leatherMasters: LeatherMaster[];
@@ -16,7 +17,7 @@ export const ReturnLeatherModal: React.FC<ReturnLeatherModalProps> = ({ leatherM
   const [returneeName, setReturneeName] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const quantityNum = parseInt(quantity, 10);
@@ -40,7 +41,9 @@ export const ReturnLeatherModal: React.FC<ReturnLeatherModalProps> = ({ leatherM
     }
     
     try {
-      inventoryService.returnLeatherStock(selectedMaster, quantityNum, returneeName.trim(), notes.trim());
+      // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
+      // Pass the leather master ID instead of the full object.
+      await api.returnLeatherStock(selectedMaster.id, quantityNum, returneeName.trim(), notes.trim());
       onStockReturned();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');

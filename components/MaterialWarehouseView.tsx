@@ -19,7 +19,8 @@ export const MaterialWarehouseView: React.FC<MaterialWarehouseViewProps> = ({ it
     const lowerCaseFilter = filter.toLowerCase().trim();
     // FIX: Removed filtering by 'unit' as it does not exist on LeatherInventoryItem.
     return items.filter(item => 
-      item.name.toLowerCase().includes(lowerCaseFilter)
+      item.name.toLowerCase().includes(lowerCaseFilter) ||
+      item.supplier.toLowerCase().includes(lowerCaseFilter)
     );
   }, [items, filter]);
 
@@ -44,6 +45,7 @@ export const MaterialWarehouseView: React.FC<MaterialWarehouseViewProps> = ({ it
           <thead className="bg-slate-800">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Jenis Kulit</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Supplier</th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-300 uppercase tracking-wider">Jumlah Stok (kaki)</th>
             </tr>
           </thead>
@@ -52,12 +54,13 @@ export const MaterialWarehouseView: React.FC<MaterialWarehouseViewProps> = ({ it
               filteredItems.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-700/50">
                   <td className="px-6 py-4 whitespace-nowrap text-white font-semibold">{item.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-300">{item.supplier}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-white font-medium text-right">{item.quantity}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={2} className="text-center py-10 text-slate-400">
+                <td colSpan={3} className="text-center py-10 text-slate-400">
                   {items.length > 0 ? 'Tidak ada jenis kulit yang cocok dengan filter.' : 'Tidak ada stok di gudang ini.'}
                 </td>
               </tr>
