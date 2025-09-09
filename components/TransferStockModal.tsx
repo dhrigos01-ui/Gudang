@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Modal } from './Modal';
-import { AppData, WarehouseCategory } from '../types';
+import { AppData, WarehouseCategory, MaklunMaster } from '../types';
 import { WAREHOUSE_NAMES } from '../constants';
 import * as inventoryService from '../services/inventoryService';
 
 interface TransferStockModalProps {
   inventory: AppData['inventory'];
+  maklunMasters: MaklunMaster[];
   onClose: () => void;
   onStockTransferred: () => void;
 }
@@ -16,12 +17,14 @@ const transferFlow: Partial<Record<WarehouseCategory, WarehouseCategory>> = {
 };
 const allowedSources = Object.keys(transferFlow) as WarehouseCategory[];
 
-export const TransferStockModal: React.FC<TransferStockModalProps> = ({ inventory, onClose, onStockTransferred }) => {
+export const TransferStockModal: React.FC<TransferStockModalProps> = ({ inventory, maklunMasters, onClose, onStockTransferred }) => {
   const [fromWarehouse, setFromWarehouse] = useState<WarehouseCategory | ''>('');
   const [toWarehouse, setToWarehouse] = useState<WarehouseCategory | ''>('');
   const [selectedItem, setSelectedItem] = useState<string>('');
   const [quantity, setQuantity] = useState('1');
   const [error, setError] = useState('');
+  const [sourceType, setSourceType] = useState<'pabrik' | 'maklun'>('pabrik');
+  const [sourceName, setSourceName] = useState('');
   
   const availableItems = useMemo(() => {
     return fromWarehouse ? inventory[fromWarehouse] : [];
@@ -54,9 +57,14 @@ export const TransferStockModal: React.FC<TransferStockModalProps> = ({ inventor
       setError(`Jumlah transfer tidak boleh melebihi stok yang ada (${currentItem.quantity}).`);
       return;
     }
+    if (sourceType === 'maklun' && !sourceName.trim()) {
+      setError('Nama sumber Maklun harus dipilih.');
+      return;
+    }
 
     try {
-      inventoryService.transferStock(currentItem.id, quantityNum, fromWarehouse, toWarehouse);
+      const source = sourceType === 'maklun' ? sourceName.trim() : 'Pabrik';
+      inventoryService.transferStock(currentItem.id, quantityNum, fromWarehouse, toWarehouse, source);
       onStockTransferred();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
@@ -127,6 +135,38 @@ export const TransferStockModal: React.FC<TransferStockModalProps> = ({ inventor
             className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-slate-800"
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300">Sumber Stok</label>
+          <div className="mt-2 flex gap-x-4">
+            <label className="flex items-center">
+              <input type="radio" name="sourceType" value="pabrik" checked={sourceType === 'pabrik'} onChange={() => setSourceType('pabrik')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
+              <span className="ml-2 text-sm text-slate-200">Pabrik</span>
+            </label>
+            <label className="flex items-center">
+              <input type="radio" name="sourceType" value="maklun" checked={sourceType === 'maklun'} onChange={() => setSourceType('maklun')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
+              <span className="ml-2 text-sm text-slate-200">Maklun</span>
+            </label>
+          </div>
+        </div>
+
+        {sourceType === 'maklun' && (
+           <div>
+            <label htmlFor="sourceName" className="block text-sm font-medium text-slate-300">Nama Sumber (Maklun)</label>
+             <select 
+              id="sourceName" 
+              value={sourceName} 
+              onChange={(e) => setSourceName(e.target.value)} 
+              className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+              required
+            >
+              <option value="" disabled>-- Pilih Sumber Maklun --</option>
+              {maklunMasters.map(master => (
+                <option key={master.id} value={master.name}>{master.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
 

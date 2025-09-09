@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
-import { ShoeMaster, AppData } from '../types';
+import { MaklunMaster, Transaction } from '../types';
 import * as inventoryService from '../services/inventoryService';
 import { PlusIcon } from './icons/PlusIcon';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
 
-interface ShoeMasterModalProps {
-  shoeMasters: ShoeMaster[];
-  inventory: AppData['inventory'];
+interface MaklunMasterModalProps {
+  maklunMasters: MaklunMaster[];
+  transactions: Transaction[];
   onClose: () => void;
   onDataChanged: () => void;
 }
 
-export const ShoeMasterModal: React.FC<ShoeMasterModalProps> = ({ shoeMasters, inventory, onClose, onDataChanged }) => {
-  const [shoeType, setShoeType] = useState('');
-  const [sizes, setSizes] = useState('');
+export const MaklunMasterModal: React.FC<MaklunMasterModalProps> = ({ maklunMasters, transactions, onClose, onDataChanged }) => {
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -31,26 +30,24 @@ export const ShoeMasterModal: React.FC<ShoeMasterModalProps> = ({ shoeMasters, i
   }, [success, error]);
 
   const resetForm = () => {
-    setShoeType('');
-    setSizes('');
+    setName('');
     setEditingId(null);
     setError('');
   };
 
-  const handleEditClick = (master: ShoeMaster) => {
+  const handleEditClick = (master: MaklunMaster) => {
     setEditingId(master.id);
-    setShoeType(master.shoeType);
-    setSizes(master.sizes.join(', '));
+    setName(master.name);
     setSuccess('');
     setError('');
-    document.getElementById('newShoeType')?.focus();
+    document.getElementById('newMaklunName')?.focus();
   };
 
-  const handleDeleteClick = (master: ShoeMaster) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus tipe sepatu "${master.shoeType}"?`)) {
+  const handleDeleteClick = (master: MaklunMaster) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus sumber maklun "${master.name}"?`)) {
       try {
-        inventoryService.deleteShoeMaster(master.id);
-        setSuccess(`"${master.shoeType}" berhasil dihapus.`);
+        inventoryService.deleteMaklunMaster(master.id);
+        setSuccess(`"${master.name}" berhasil dihapus.`);
         onDataChanged();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
@@ -65,11 +62,11 @@ export const ShoeMasterModal: React.FC<ShoeMasterModalProps> = ({ shoeMasters, i
 
     try {
       if (editingId) {
-        inventoryService.updateShoeMaster(editingId, shoeType, sizes);
-        setSuccess(`"${shoeType}" berhasil diperbarui.`);
+        inventoryService.updateMaklunMaster(editingId, name);
+        setSuccess(`"${name}" berhasil diperbarui.`);
       } else {
-        inventoryService.addShoeMaster(shoeType, sizes);
-        setSuccess(`"${shoeType}" berhasil ditambahkan.`);
+        inventoryService.addMaklunMaster(name);
+        setSuccess(`"${name}" berhasil ditambahkan.`);
       }
       onDataChanged();
       resetForm();
@@ -78,37 +75,24 @@ export const ShoeMasterModal: React.FC<ShoeMasterModalProps> = ({ shoeMasters, i
     }
   };
   
-  const isShoeTypeInUse = (shoeType: string): boolean => {
-      // FIX: Check if 'shoeType' property exists on item before accessing it, as inventory can contain MaterialInventoryItem.
-      return Object.values(inventory).flat().some(item => 'shoeType' in item && item.shoeType === shoeType);
+  const isMaklunInUse = (name: string): boolean => {
+      return transactions.some(tx => tx.source === name);
   }
 
   return (
-    <Modal title="Manajemen Master Data Sepatu" onClose={onClose}>
+    <Modal title="Manajemen Master Data Maklun" onClose={onClose}>
       <div className="space-y-6">
         <form onSubmit={handleSubmit} className="space-y-4 p-4 border border-slate-700 rounded-lg">
-          <h4 className="text-md font-semibold text-white mb-2">{editingId ? 'Edit Tipe Sepatu' : 'Tambah Tipe Sepatu Baru'}</h4>
+          <h4 className="text-md font-semibold text-white mb-2">{editingId ? 'Edit Sumber Maklun' : 'Tambah Sumber Maklun Baru'}</h4>
           <div>
-            <label htmlFor="newShoeType" className="block text-sm font-medium text-slate-300">Nama Tipe Sepatu</label>
+            <label htmlFor="newMaklunName" className="block text-sm font-medium text-slate-300">Nama Sumber</label>
             <input 
               type="text" 
-              id="newShoeType" 
-              value={shoeType} 
-              onChange={(e) => setShoeType(e.target.value)} 
+              id="newMaklunName" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
               className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" 
-              placeholder="Contoh: Running Pro Max"
-              required 
-            />
-          </div>
-          <div>
-            <label htmlFor="newSizes" className="block text-sm font-medium text-slate-300">Ukuran Tersedia (pisahkan dengan koma)</label>
-            <input 
-              type="text" 
-              id="newSizes" 
-              value={sizes} 
-              onChange={(e) => setSizes(e.target.value)} 
-              className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-              placeholder="Contoh: 39, 40, 41, 42, 43" 
+              placeholder="Contoh: PT Maklun Sejahtera"
               required 
             />
           </div>
@@ -129,15 +113,12 @@ export const ShoeMasterModal: React.FC<ShoeMasterModalProps> = ({ shoeMasters, i
         </form>
 
         <div>
-          <h4 className="text-md font-semibold text-white mb-2">Daftar Master Sepatu</h4>
+          <h4 className="text-md font-semibold text-white mb-2">Daftar Sumber Maklun</h4>
           <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
-            {shoeMasters.length > 0 ? (
-              shoeMasters.map(master => (
+            {maklunMasters.length > 0 ? (
+              maklunMasters.map(master => (
                 <div key={master.id} className="bg-slate-700/50 p-3 rounded-lg flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold text-white">{master.shoeType}</p>
-                    <p className="text-sm text-slate-400">Ukuran: {master.sizes.join(', ')}</p>
-                  </div>
+                  <p className="font-semibold text-white">{master.name}</p>
                   <div className="flex gap-2">
                     <button onClick={() => handleEditClick(master)} className="p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-slate-600" title="Edit">
                       <PencilIcon className="h-5 w-5" />
@@ -145,8 +126,8 @@ export const ShoeMasterModal: React.FC<ShoeMasterModalProps> = ({ shoeMasters, i
                     <button 
                       onClick={() => handleDeleteClick(master)} 
                       className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-600 disabled:text-slate-600 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                      disabled={isShoeTypeInUse(master.shoeType)}
-                      title={isShoeTypeInUse(master.shoeType) ? "Tidak bisa dihapus karena stok masih ada" : "Hapus"}
+                      disabled={isMaklunInUse(master.name)}
+                      title={isMaklunInUse(master.name) ? "Tidak bisa dihapus karena sudah digunakan" : "Hapus"}
                     >
                       <TrashIcon className="h-5 w-5" />
                     </button>

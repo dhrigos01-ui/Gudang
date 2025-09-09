@@ -2,6 +2,7 @@ export enum WarehouseCategory {
   FINISHED_GOODS = 'finished_goods',
   WIP = 'wip',
   NEARLY_FINISHED = 'nearly_finished',
+  LEATHER = 'leather',
 }
 
 export interface Shoe {
@@ -23,7 +24,7 @@ export interface Transaction {
   id: string;
   date: string;
   type: TransactionType;
-  item: Shoe;
+  item: Shoe | { name: string };
   quantity: number;
   warehouse: WarehouseCategory;
   source?: string; // Untuk stok masuk eksternal
@@ -36,10 +37,35 @@ export interface ShoeMaster {
   sizes: number[];
 }
 
-export interface AppData {
-  inventory: Record<WarehouseCategory, InventoryItem[]>;
-  transactions: Transaction[];
-  shoeMasters: ShoeMaster[];
+export interface MaklunMaster {
+  id: string;
+  name: string;
 }
 
-export type Page = WarehouseCategory | 'dashboard' | 'transactions';
+export interface LeatherMaster {
+    id: string;
+    name: string;
+}
+
+export interface LeatherInventoryItem {
+    id: string;
+    leatherMasterId: string;
+    name: string;
+    quantity: number;
+    supplier: string;
+}
+
+export interface AppData {
+  inventory: {
+    [WarehouseCategory.FINISHED_GOODS]: InventoryItem[];
+    [WarehouseCategory.WIP]: InventoryItem[];
+    [WarehouseCategory.NEARLY_FINISHED]: InventoryItem[];
+    [WarehouseCategory.LEATHER]: LeatherInventoryItem[];
+  };
+  transactions: Transaction[];
+  shoeMasters: ShoeMaster[];
+  maklunMasters: MaklunMaster[];
+  leatherMasters: LeatherMaster[];
+}
+
+export type Page = WarehouseCategory | 'dashboard' | 'transactions' | 'master_shoe' | 'master_leather' | 'master_maklun';

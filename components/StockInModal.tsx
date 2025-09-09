@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Modal } from './Modal';
-import { WarehouseCategory, ShoeMaster } from '../types';
+import { WarehouseCategory, ShoeMaster, MaklunMaster } from '../types';
 import { WAREHOUSE_NAMES } from '../constants';
 import * as inventoryService from '../services/inventoryService';
 
@@ -8,14 +8,15 @@ interface StockInModalProps {
   onClose: () => void;
   onStockAdded: () => void;
   shoeMasters: ShoeMaster[];
+  maklunMasters: MaklunMaster[];
 }
 
-export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdded, shoeMasters }) => {
+export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdded, shoeMasters, maklunMasters }) => {
   const [selectedShoeType, setSelectedShoeType] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState('');
   const [warehouse, setWarehouse] = useState<WarehouseCategory>(WarehouseCategory.WIP);
-  const [sourceType, setSourceType] = useState<'internal' | 'external'>('internal');
+  const [sourceType, setSourceType] = useState<'pabrik' | 'maklun'>('pabrik');
   const [sourceName, setSourceName] = useState('');
   const [error, setError] = useState('');
 
@@ -39,13 +40,13 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
       setError('Semua field harus diisi dengan nilai yang valid.');
       return;
     }
-    if (sourceType === 'external' && !sourceName.trim()) {
-      setError('Nama sumber eksternal harus diisi.');
+    if (sourceType === 'maklun' && !sourceName.trim()) {
+      setError('Nama sumber Maklun harus dipilih.');
       return;
     }
     
     try {
-      const source = sourceType === 'external' ? sourceName.trim() : 'Internal';
+      const source = sourceType === 'maklun' ? sourceName.trim() : 'Pabrik';
       inventoryService.addStock({ shoeType: selectedShoeType, size: sizeNum }, quantityNum, warehouse, source);
       onStockAdded();
     } catch (err) {
@@ -105,20 +106,31 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
           <label className="block text-sm font-medium text-slate-300">Sumber Stok</label>
           <div className="mt-2 flex gap-x-4">
             <label className="flex items-center">
-              <input type="radio" name="sourceType" value="internal" checked={sourceType === 'internal'} onChange={() => setSourceType('internal')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
-              <span className="ml-2 text-sm text-slate-200">Internal</span>
+              <input type="radio" name="sourceType" value="pabrik" checked={sourceType === 'pabrik'} onChange={() => setSourceType('pabrik')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
+              <span className="ml-2 text-sm text-slate-200">Pabrik</span>
             </label>
             <label className="flex items-center">
-              <input type="radio" name="sourceType" value="external" checked={sourceType === 'external'} onChange={() => setSourceType('external')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
-              <span className="ml-2 text-sm text-slate-200">Eksternal</span>
+              <input type="radio" name="sourceType" value="maklun" checked={sourceType === 'maklun'} onChange={() => setSourceType('maklun')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
+              <span className="ml-2 text-sm text-slate-200">Maklun</span>
             </label>
           </div>
         </div>
 
-        {sourceType === 'external' && (
+        {sourceType === 'maklun' && (
           <div>
-            <label htmlFor="sourceName" className="block text-sm font-medium text-slate-300">Nama Sumber (Pemasok)</label>
-            <input type="text" id="sourceName" value={sourceName} onChange={(e) => setSourceName(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" placeholder="Contoh: PT Pemasok Jaya"/>
+            <label htmlFor="sourceName" className="block text-sm font-medium text-slate-300">Nama Sumber (Maklun)</label>
+             <select 
+              id="sourceName" 
+              value={sourceName} 
+              onChange={(e) => setSourceName(e.target.value)} 
+              className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+              required
+            >
+              <option value="" disabled>-- Pilih Sumber Maklun --</option>
+              {maklunMasters.map(master => (
+                <option key={master.id} value={master.name}>{master.name}</option>
+              ))}
+            </select>
           </div>
         )}
 
@@ -126,13 +138,20 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
         
         {!shoeMasters || shoeMasters.length === 0 && (
             <p className="text-amber-400 text-sm p-3 bg-amber-500/10 rounded-md">
-                Data master sepatu kosong. Silakan tambahkan data melalui tombol 'Master Data' di header terlebih dahulu.
+                Data master sepatu kosong. Silakan tambahkan data melalui 'Master Data' terlebih dahulu.
+            </p>
+        )}
+        
+        {sourceType === 'maklun' && (!maklunMasters || maklunMasters.length === 0) && (
+            <p className="text-amber-400 text-sm p-3 bg-amber-500/10 rounded-md">
+                Data master maklun kosong. Silakan tambahkan data melalui 'Master Maklun' terlebih dahulu.
             </p>
         )}
 
+
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-600 hover:bg-slate-500 rounded-md">Batal</button>
-          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-600 rounded-md" disabled={!shoeMasters || shoeMasters.length === 0}>Simpan</button>
+          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-600 rounded-md" disabled={!shoeMasters || shoeMasters.length === 0 || (sourceType === 'maklun' && maklunMasters.length === 0)}>Simpan</button>
         </div>
       </form>
     </Modal>

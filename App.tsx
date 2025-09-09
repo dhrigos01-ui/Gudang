@@ -1,16 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { AppData, InventoryItem, Page, WarehouseCategory } from './types';
-import { WAREHOUSE_NAMES } from './constants';
+import type { AppData, InventoryItem, Page, LeatherInventoryItem } from './types';
+import { WarehouseCategory } from './types';
 import * as inventoryService from './services/inventoryService';
-import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { WarehouseView } from './components/WarehouseView';
 import { TransactionHistory } from './components/TransactionHistory';
 import { StockInModal } from './components/StockInModal';
 import { StockOutModal } from './components/StockOutModal';
 import { StockOutGeneralModal } from './components/StockOutGeneralModal';
-import { ShoeMasterModal } from './components/ShoeMasterModal';
+import { ShoeMasterPage } from './components/ShoeMasterPage';
 import { TransferStockModal } from './components/TransferStockModal';
+import { MaklunMasterPage } from './components/MaklunMasterPage';
+import { LeatherMasterPage } from './components/LeatherMasterPage';
+import { StockInLeatherModal } from './components/StockInLeatherModal';
+import { LeatherWarehouseView } from './components/LeatherWarehouseView';
+import { ReturnLeatherModal } from './components/ReturnLeatherModal';
+import { EditShoeStockModal } from './components/EditShoeStockModal';
+import { EditLeatherStockModal } from './components/EditLeatherStockModal';
+
 
 const LoadingScreen: React.FC = () => (
   <div className="fixed inset-0 bg-slate-900 flex flex-col justify-center items-center z-50">
@@ -23,16 +31,38 @@ const LoadingScreen: React.FC = () => (
 );
 
 
+const initialAppData: AppData = {
+  inventory: {
+    [WarehouseCategory.FINISHED_GOODS]: [],
+    [WarehouseCategory.WIP]: [],
+    [WarehouseCategory.NEARLY_FINISHED]: [],
+    [WarehouseCategory.LEATHER]: [],
+  },
+  transactions: [],
+  shoeMasters: [],
+  maklunMasters: [],
+  leatherMasters: [],
+};
+
+
 export default function App() {
-  const [data, setData] = useState<AppData>({ inventory: { finished_goods: [], wip: [], nearly_finished: [] }, transactions: [], shoeMasters: [] });
+  const [data, setData] = useState<AppData>(initialAppData);
   const [page, setPage] = useState<Page>('dashboard');
   const [isLoading, setIsLoading] = useState(true);
   const [isStockInModalOpen, setIsStockInModalOpen] = useState(false);
   const [isStockOutModalOpen, setIsStockOutModalOpen] = useState(false);
   const [isStockOutGeneralModalOpen, setIsStockOutGeneralModalOpen] = useState(false);
-  const [isShoeMasterModalOpen, setIsShoeMasterModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isStockInLeatherModalOpen, setIsStockInLeatherModalOpen] = useState(false);
+  const [isReturnLeatherModalOpen, setIsReturnLeatherModalOpen] = useState(false);
   const [itemToSell, setItemToSell] = useState<InventoryItem | null>(null);
+
+  // States for editing stock
+  const [isEditShoeStockModalOpen, setIsEditShoeStockModalOpen] = useState(false);
+  const [itemToEditShoe, setItemToEditShoe] = useState<InventoryItem | null>(null);
+  const [isEditLeatherStockModalOpen, setIsEditLeatherStockModalOpen] = useState(false);
+  const [itemToEditLeather, setItemToEditLeather] = useState<LeatherInventoryItem | null>(null);
+
 
   const reloadData = useCallback(() => {
     try {
@@ -55,6 +85,38 @@ export default function App() {
     setItemToSell(item);
     setIsStockOutModalOpen(true);
   };
+
+  const handleEditShoeStockRequest = (item: InventoryItem) => {
+    setItemToEditShoe(item);
+    setIsEditShoeStockModalOpen(true);
+  };
+
+  const handleDeleteShoeStockRequest = (item: InventoryItem) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus stok ${item.shoeType} No. ${item.size} (${item.quantity} unit) secara permanen? Aksi ini tidak dapat dibatalkan.`)) {
+        try {
+            inventoryService.deleteShoeStock(item.id);
+            reloadData();
+        } catch (e) {
+            alert(e instanceof Error ? e.message : 'Gagal menghapus stok.');
+        }
+    }
+  };
+  
+  const handleEditLeatherStockRequest = (item: LeatherInventoryItem) => {
+    setItemToEditLeather(item);
+    setIsEditLeatherStockModalOpen(true);
+  };
+
+  const handleDeleteLeatherStockRequest = (item: LeatherInventoryItem) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus stok ${item.name} dari supplier ${item.supplier} (${item.quantity} kaki) secara permanen? Aksi ini tidak dapat dibatalkan.`)) {
+        try {
+            inventoryService.deleteLeatherStockByItemId(item.id);
+            reloadData();
+        } catch (e) {
+            alert(e instanceof Error ? e.message : 'Gagal menghapus stok.');
+        }
+    }
+  };
   
   if (isLoading) {
     return <LoadingScreen />;
@@ -66,33 +128,49 @@ export default function App() {
         return <Dashboard inventory={data.inventory} setPage={setPage} />;
       case 'transactions':
         return <TransactionHistory transactions={data.transactions} />;
+      case 'master_shoe':
+        return <ShoeMasterPage shoeMasters={data.shoeMasters} inventory={data.inventory} onDataChanged={reloadData} />;
+      case 'master_leather':
+        return <LeatherMasterPage leatherMasters={data.leatherMasters} leatherInventory={data.inventory.leather} onDataChanged={reloadData} />;
+      case 'master_maklun':
+        return <MaklunMasterPage maklunMasters={data.maklunMasters} transactions={data.transactions} onDataChanged={reloadData} />;
+      case WarehouseCategory.LEATHER:
+        return <LeatherWarehouseView 
+                 items={data.inventory[WarehouseCategory.LEATHER]} 
+                 onEditRequest={handleEditLeatherStockRequest}
+                 onDeleteRequest={handleDeleteLeatherStockRequest}
+               />;
       default:
-        const warehouseCat = page as WarehouseCategory;
+        const warehouseCat = page as Exclude<WarehouseCategory, WarehouseCategory.LEATHER>;
         return <WarehouseView 
                  category={warehouseCat} 
                  items={data.inventory[warehouseCat]} 
                  onSellRequest={handleSellRequest}
+                 onEditRequest={handleEditShoeStockRequest}
+                 onDeleteRequest={handleDeleteShoeStockRequest}
                />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 font-sans">
-      <Header 
+    <div className="flex min-h-screen bg-slate-900 text-slate-200 font-sans">
+      <Sidebar 
         activePage={page} 
         setPage={setPage} 
         onAddStock={() => setIsStockInModalOpen(true)}
+        onAddLeather={() => setIsStockInLeatherModalOpen(true)}
         onRemoveStock={() => setIsStockOutGeneralModalOpen(true)}
-        onOpenMasterData={() => setIsShoeMasterModalOpen(true)}
         onOpenTransfer={() => setIsTransferModalOpen(true)}
+        onReturnLeather={() => setIsReturnLeatherModalOpen(true)}
       />
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         {renderPage()}
       </main>
 
       {isStockInModalOpen && (
         <StockInModal
           shoeMasters={data.shoeMasters}
+          maklunMasters={data.maklunMasters}
           onClose={() => setIsStockInModalOpen(false)}
           onStockAdded={() => {
             reloadData();
@@ -101,9 +179,22 @@ export default function App() {
         />
       )}
       
+      {isStockInLeatherModalOpen && (
+        <StockInLeatherModal
+          leatherMasters={data.leatherMasters}
+          onClose={() => setIsStockInLeatherModalOpen(false)}
+          onStockAdded={() => {
+            reloadData();
+            setIsStockInLeatherModalOpen(false);
+          }}
+        />
+      )}
+      
       {isStockOutGeneralModalOpen && (
         <StockOutGeneralModal
-          inventory={data.inventory}
+          shoeInventory={data.inventory}
+          leatherInventory={data.inventory.leather}
+          maklunMasters={data.maklunMasters}
           onClose={() => setIsStockOutGeneralModalOpen(false)}
           onStockRemoved={() => {
             reloadData();
@@ -127,25 +218,55 @@ export default function App() {
         />
       )}
 
-      {isShoeMasterModalOpen && (
-        <ShoeMasterModal
-          inventory={data.inventory}
-          shoeMasters={data.shoeMasters}
-          onClose={() => setIsShoeMasterModalOpen(false)}
-          onDataChanged={() => {
-            reloadData();
-            // Tidak menutup modal agar pengguna bisa menambah/edit data lain
-          }}
-        />
-      )}
-
       {isTransferModalOpen && (
         <TransferStockModal
           inventory={data.inventory}
+          maklunMasters={data.maklunMasters}
           onClose={() => setIsTransferModalOpen(false)}
           onStockTransferred={() => {
             reloadData();
             setIsTransferModalOpen(false);
+          }}
+        />
+      )}
+
+      {isReturnLeatherModalOpen && (
+        <ReturnLeatherModal
+            leatherMasters={data.leatherMasters}
+            onClose={() => setIsReturnLeatherModalOpen(false)}
+            onStockReturned={() => {
+                reloadData();
+                setIsReturnLeatherModalOpen(false);
+            }}
+        />
+      )}
+
+      {isEditShoeStockModalOpen && itemToEditShoe && (
+        <EditShoeStockModal
+          item={itemToEditShoe}
+          onClose={() => {
+            setIsEditShoeStockModalOpen(false);
+            setItemToEditShoe(null);
+          }}
+          onStockUpdated={() => {
+            reloadData();
+            setIsEditShoeStockModalOpen(false);
+            setItemToEditShoe(null);
+          }}
+        />
+      )}
+
+      {isEditLeatherStockModalOpen && itemToEditLeather && (
+        <EditLeatherStockModal
+          item={itemToEditLeather}
+          onClose={() => {
+            setIsEditLeatherStockModalOpen(false);
+            setItemToEditLeather(null);
+          }}
+          onStockUpdated={() => {
+            reloadData();
+            setIsEditLeatherStockModalOpen(false);
+            setItemToEditLeather(null);
           }}
         />
       )}
