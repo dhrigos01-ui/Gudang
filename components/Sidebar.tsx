@@ -82,35 +82,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button onClick={onToggle} className="md:hidden text-slate-400 hover:text-white">✕</button>
       </div>
 
-      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        <p className="px-2 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</p>
-        {mainNavItems.map(item => renderNavButton(item))}
-        
-        {isAdmin && (
-            <>
-                <p className="px-2 pt-4 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Master Data</p>
-                {masterNavItems.map(item => renderNavButton(item))}
-            </>
-        )}
-      </nav>
-      
-      <div className="p-2 border-t border-slate-700 space-y-2">
-        {isAdmin && (
-            <>
-                <p className="px-2 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Aksi</p>
-                {actionItems.map((action) => (
-                    <button
-                        key={action.label}
-                        onClick={action.onClick}
-                        className={`w-full flex items-center justify-start gap-3 ${action.className} text-white font-bold py-2 px-4 rounded-lg transition-transform duration-200 transform hover:scale-105 shadow-md`}
-                    >
-                        {action.icon}
-                        <span className="text-sm">{action.label}</span>
-                    </button>
-                ))}
-            </>
-        )}
-        <div className="p-2 mt-auto">
+      <div className="p-2">
+        <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+          <p className="px-2 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</p>
+          {mainNavItems.map(item => renderNavButton(item))}
+          {isAdmin && (
+              <>
+                  <p className="px-2 pt-4 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Master Data</p>
+                  {masterNavItems.map(item => renderNavButton(item))}
+              </>
+          )}
+        </div>
+      </div>
+
+      {isAdmin && (
+        <div className="p-2 border-t border-slate-700 space-y-2">
+          <p className="px-2 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Aksi</p>
+          {actionItems.map((action) => (
+              <button
+                  key={action.label}
+                  onClick={action.onClick}
+                  className={`w-full flex items-center justify-start gap-3 ${action.className} text-white font-bold py-2 px-4 rounded-lg transition-transform duration-200 transform hover:scale-105 shadow-md`}
+              >
+                  {action.icon}
+                  <span className="text-sm">{action.label}</span>
+              </button>
+          ))}
+        </div>
+      )}
+
+      <div className="p-2 border-top border-slate-700">
+        <div className="p-2">
             <p className="text-sm text-slate-400">Login sebagai: <span className="font-bold text-white">{currentUser.username} ({currentUser.role})</span></p>
             <button
                 onClick={onLogout}
