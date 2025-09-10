@@ -61,6 +61,19 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
   const [itemToEditShoe, setItemToEditShoe] = useState<InventoryItem | null>(null);
   const [isEditLeatherStockModalOpen, setIsEditLeatherStockModalOpen] = useState(false);
   const [itemToEditLeather, setItemToEditLeather] = useState<LeatherInventoryItem | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    // Kunci scroll saat sidebar terbuka di mobile
+    if (isSidebarOpen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, [isSidebarOpen]);
 
   const reloadData = useCallback(async () => {
     try {
@@ -147,8 +160,19 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
 
   return (
     <div className="flex min-h-screen bg-slate-900 text-slate-200 font-sans">
-      <Sidebar activePage={page} setPage={setPage} onAddStock={() => setIsStockInModalOpen(true)} onAddLeather={() => setIsStockInLeatherModalOpen(true)} onRemoveStock={() => setIsStockOutGeneralModalOpen(true)} onOpenTransfer={() => setIsSaleModalOpen(true)} onReturnLeather={() => setIsReturnLeatherModalOpen(true)} currentUser={currentUser} onLogout={onLogout} />
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+      {/* Overlay untuk menutup sidebar di mobile */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsSidebarOpen(false)} />
+      )}
+      <Sidebar activePage={page} setPage={(p) => { setPage(p); setIsSidebarOpen(false); }} onAddStock={() => { setIsStockInModalOpen(true); setIsSidebarOpen(false); }} onAddLeather={() => { setIsStockInLeatherModalOpen(true); setIsSidebarOpen(false); }} onRemoveStock={() => { setIsStockOutGeneralModalOpen(true); setIsSidebarOpen(false); }} onOpenTransfer={() => { setIsSaleModalOpen(true); setIsSidebarOpen(false); }} onReturnLeather={() => { setIsReturnLeatherModalOpen(true); setIsSidebarOpen(false); }} currentUser={currentUser} onLogout={onLogout} isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(v => !v)} />
+      {/* Topbar */}
+      <div className="fixed top-0 left-0 right-0 z-30 h-14 bg-slate-800/80 backdrop-blur border-b border-slate-700 flex items-center px-3 shadow-sm md:hidden">
+        <button onClick={() => setIsSidebarOpen(true)} className="md:hidden px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm" aria-label="Buka menu">Menu</button>
+        <div className="flex-1 text-center">
+          <span className="text-white font-semibold">Gudang Sepatu</span>
+        </div>
+      </div>
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto pt-20 md:pt-0">
         {renderPage()}
       </main>
 

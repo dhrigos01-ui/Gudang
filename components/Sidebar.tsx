@@ -19,6 +19,8 @@ interface SidebarProps {
   onReturnLeather: () => void;
   currentUser: User;
   onLogout: () => void;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -26,7 +28,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onOpenTransfer,
     onReturnLeather,
     currentUser,
-    onLogout
+    onLogout,
+    isOpen,
+    onToggle
 }) => {
   const isAdmin = currentUser.role === UserRole.ADMIN;
 
@@ -69,10 +73,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   );
 
   return (
-    <aside className="w-64 bg-slate-800 flex flex-col flex-shrink-0 h-screen sticky top-0 border-r border-slate-700">
-      <div className="flex items-center space-x-3 p-4 border-b border-slate-700">
-        <ShoeIcon className="h-8 w-8 text-cyan-400" />
-        <h1 className="text-xl font-bold tracking-tight text-white">Gudang Sepatu</h1>
+    <aside className={`fixed inset-y-0 left-0 w-64 bg-slate-800 flex flex-col h-full border-r border-slate-700 z-40 transform transition-transform duration-200 ease-in-out will-change-transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:flex-shrink-0`}>
+      <div className="flex items-center justify-between p-4 border-b border-slate-700">
+        <div className="flex items-center space-x-3">
+          <ShoeIcon className="h-8 w-8 text-cyan-400" />
+          <h1 className="text-xl font-bold tracking-tight text-white">Gudang Sepatu</h1>
+        </div>
+        <button onClick={onToggle} className="md:hidden text-slate-400 hover:text-white">✕</button>
       </div>
 
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">

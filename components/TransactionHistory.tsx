@@ -133,7 +133,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
 
   return (
     <Card>
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4 px-2 sm:px-0">
         <h2 className="text-2xl font-bold text-white">Riwayat Histori</h2>
         <button
           onClick={handleExport}
@@ -145,8 +145,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
       </div>
 
       {/* Filter Panel */}
-      <div className="mb-6 p-4 bg-slate-900/50 border border-slate-700 rounded-lg">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mb-6 p-3 sm:p-4 bg-slate-900/50 border border-slate-700 rounded-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div>
             <label htmlFor="startDate" className="block text-sm font-medium text-slate-300 mb-1">Dari Tanggal</label>
             <input type="date" name="startDate" id="startDate" value={filters.startDate} onChange={handleFilterChange} className="w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" />
@@ -185,29 +185,29 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
         </div>
       </div>
 
-       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-700">
+       <div className="overflow-x-auto -mx-2 sm:mx-0">
+        <table className="min-w-full divide-y divide-slate-700 text-sm">
           <thead className="bg-slate-800">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+              <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                 <button onClick={toggleSortOrder} className="flex items-center gap-1 hover:text-white transition-colors">
                   Tanggal
                   {sortOrder === 'desc' ? <ArrowDownIcon className="h-4 w-4" /> : <ArrowUpIcon className="h-4 w-4" />}
                 </button>
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Jenis</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Barang</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Jumlah</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Gudang</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Sumber/Keterangan</th>
+              <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Jenis</th>
+              <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Barang</th>
+              <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Jumlah</th>
+              <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Gudang</th>
+              <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Sumber/Keterangan</th>
             </tr>
           </thead>
           <tbody className="bg-slate-800/50 divide-y divide-slate-700">
             {filteredAndSortedTransactions.length > 0 ? (
               filteredAndSortedTransactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-slate-700/50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{new Date(tx.date).toLocaleString('id-ID')}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-4 sm:px-6 py-3 whitespace-nowrap text-slate-300">{new Date(tx.date).toLocaleString('id-ID')}</td>
+                  <td className="px-4 sm:px-6 py-3 whitespace-nowrap font-medium">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       tx.type === TransactionType.IN && tx.source === 'Retur' ? 'bg-orange-500/20 text-orange-300' :
                       tx.type === TransactionType.IN ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
@@ -215,12 +215,12 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
                       {tx.type === TransactionType.IN && tx.source === 'Retur' ? 'RETURN' : tx.type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                  <td className="px-4 sm:px-6 py-3 whitespace-nowrap text-white">
                     {isShoe(tx.item) ? `${tx.item.shoeType} (No. ${tx.item.size})` : `${tx.item.name}`}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{tx.quantity} {tx.warehouse === WarehouseCategory.LEATHER && 'kaki'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{WAREHOUSE_NAMES[tx.warehouse]}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{tx.source || tx.notes || '-'}</td>
+                  <td className="px-4 sm:px-6 py-3 whitespace-nowrap text-slate-300">{tx.quantity} {tx.warehouse === WarehouseCategory.LEATHER && 'kaki'}</td>
+                  <td className="px-4 sm:px-6 py-3 whitespace-nowrap text-slate-300">{WAREHOUSE_NAMES[tx.warehouse]}</td>
+                  <td className="px-4 sm:px-6 py-3 whitespace-nowrap text-slate-400">{tx.source || tx.notes || '-'}</td>
                 </tr>
               ))
             ) : (

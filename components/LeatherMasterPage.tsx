@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from './Card';
+import { Modal } from './Modal';
 import { LeatherMaster, LeatherInventoryItem, User, UserRole } from '../types';
 // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
 import * as api from '../lib/api';
@@ -20,6 +21,8 @@ export const LeatherMasterPage: React.FC<LeatherMasterPageProps> = ({ leatherMas
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const isAdmin = currentUser.role === UserRole.ADMIN;
+  const [deleteTarget, setDeleteTarget] = useState<LeatherMaster | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (success || error) {
@@ -45,16 +48,24 @@ export const LeatherMasterPage: React.FC<LeatherMasterPageProps> = ({ leatherMas
     document.getElementById('newLeatherName')?.focus();
   };
 
-  const handleDeleteClick = async (master: LeatherMaster) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus jenis kulit "${master.name}"?`)) {
-      try {
-        // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
-        await api.deleteLeatherMaster(master.id);
-        setSuccess(`"${master.name}" berhasil dihapus.`);
-        onDataChanged();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
-      }
+  const handleDeleteClick = (master: LeatherMaster) => {
+    setDeleteTarget(master);
+    setError('');
+    setSuccess('');
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setIsDeleting(true);
+      await api.deleteLeatherMaster(deleteTarget.id);
+      setSuccess(`"${deleteTarget.name}" berhasil dihapus.`);
+      setDeleteTarget(null);
+      onDataChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -152,6 +163,19 @@ export const LeatherMasterPage: React.FC<LeatherMasterPageProps> = ({ leatherMas
                 </div>
             </div>
         </Card>
+        {deleteTarget && (
+          <Modal title="Konfirmasi Hapus" onClose={() => setDeleteTarget(null)}>
+            <div className="space-y-4">
+              <p className="text-slate-300">Apakah Anda yakin ingin menghapus jenis kulit <span className="font-semibold text-white">"{deleteTarget.name}"</span>? Aksi ini tidak dapat dibatalkan.</p>
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-600 hover:bg-slate-500 rounded-md">Batal</button>
+                <button type="button" onClick={confirmDelete} disabled={isDeleting} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-60">
+                  {isDeleting ? 'Menghapus...' : 'Hapus'}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
     </div>
   );
 };
