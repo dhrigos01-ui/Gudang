@@ -41,6 +41,12 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ category, items, o
   }, [items, filter]);
 
   const shoeTypes = Object.keys(groupedAndFilteredItems);
+  const totalsByShoeType = useMemo(() => {
+    return Object.entries(groupedAndFilteredItems).reduce((acc, [shoeType, shoeItems]) => {
+      acc[shoeType] = shoeItems.reduce((sum, item) => sum + item.quantity, 0);
+      return acc;
+    }, {} as Record<string, number>);
+  }, [groupedAndFilteredItems]);
 
   return (
     <Card>
@@ -57,9 +63,9 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ category, items, o
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-md">
         <table className="min-w-full divide-y divide-slate-700">
-          <thead className="bg-slate-800">
+          <thead className="bg-slate-800 sticky top-0 z-10">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Jenis</th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">Ukuran</th>
@@ -77,7 +83,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ category, items, o
                         rowSpan={shoeItems.length}
                         className="px-6 py-4 whitespace-nowrap text-white font-semibold align-top"
                       >
-                        {shoeType}
+                        {shoeType} <span className="block text-slate-300 text-sm font-normal">Total: {totalsByShoeType[shoeType] || 0}</span>
                       </td>
                     )}
                     <td className="px-6 py-4 whitespace-nowrap text-slate-300 text-center align-middle">

@@ -60,9 +60,9 @@ export const LeatherWarehouseView: React.FC<LeatherWarehouseViewProps> = ({ item
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-md">
         <table className="min-w-full divide-y divide-slate-700">
-          <thead className="bg-slate-800">
+          <thead className="bg-slate-800 sticky top-0 z-10">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Jenis Kulit</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Supplier</th>
@@ -72,44 +72,46 @@ export const LeatherWarehouseView: React.FC<LeatherWarehouseViewProps> = ({ item
           </thead>
           <tbody className="bg-slate-800/50 divide-y divide-slate-700">
             {leatherTypes.length > 0 ? (
-              Object.entries(groupedAndFilteredItems).map(([leatherName, leatherItems]) =>
-                leatherItems.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-slate-700/50">
-                    {index === 0 && (
-                      <td
-                        rowSpan={leatherItems.length}
-                        className="px-6 py-4 whitespace-nowrap text-white font-semibold align-top"
-                      >
-                        {leatherName}
-                      </td>
-                    )}
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-300 align-middle">
-                      {item.supplier}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-white font-medium text-right align-middle">
-                      {item.quantity}
-                    </td>
-                    {isAdmin && (
-                        <td className="px-6 py-4 whitespace-nowrap text-center align-middle">
-                            <div className="flex justify-center items-center gap-2">
-                                <button 
-                                    onClick={() => onEditRequest(item)} 
-                                    className="p-2 text-slate-400 hover:text-amber-300 transition-colors rounded-full hover:bg-slate-600" title="Edit/Penyesuaian Stok">
-                                    <PencilIcon className="h-5 w-5" />
-                                </button>
-                                <button 
-                                    onClick={() => onDeleteRequest(item)} 
-                                    className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-600"
-                                    title="Hapus Stok"
-                                >
-                                    <TrashIcon className="h-5 w-5" />
-                                </button>
-                            </div>
+              Object.entries(groupedAndFilteredItems).map(([leatherName, leatherItems]) => (
+                <React.Fragment key={leatherName}>
+                  {leatherItems.map((item, index) => (
+                    <tr key={item.id} className="hover:bg-slate-700/50">
+                      {index === 0 && (
+                        <td
+                          rowSpan={leatherItems.length}
+                          className="px-6 py-4 whitespace-nowrap text-white font-semibold align-top"
+                        >
+                          {leatherName}
                         </td>
-                    )}
-                  </tr>
-                ))
-              )
+                      )}
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-300 align-middle">
+                        {item.supplier}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-white font-medium text-right align-middle">
+                        {item.quantity}
+                      </td>
+                      {isAdmin && (
+                          <td className="px-6 py-4 whitespace-nowrap text-center align-middle">
+                              <div className="flex justify-center items-center gap-2">
+                                  <button 
+                                      onClick={() => onEditRequest(item)} 
+                                      className="p-2 text-slate-400 hover:text-amber-300 transition-colors rounded-full hover:bg-slate-600" title="Edit/Penyesuaian Stok">
+                                      <PencilIcon className="h-5 w-5" />
+                                  </button>
+                                  <button 
+                                      onClick={() => onDeleteRequest(item)} 
+                                      className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-600"
+                                      title="Hapus Stok"
+                                  >
+                                      <TrashIcon className="h-5 w-5" />
+                                  </button>
+                              </div>
+                          </td>
+                      )}
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))
             ) : (
               <tr>
                 <td colSpan={isAdmin ? 4 : 3} className="text-center py-10 text-slate-400">

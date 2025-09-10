@@ -17,6 +17,7 @@ import { LeatherWarehouseView } from '../components/LeatherWarehouseView';
 import { ReturnLeatherModal } from '../components/ReturnLeatherModal';
 import { EditShoeStockModal } from '../components/EditShoeStockModal';
 import { EditLeatherStockModal } from '../components/EditLeatherStockModal';
+import { Modal } from '../components/Modal';
 
 interface HomeProps {
     currentUser: User;
@@ -62,6 +63,9 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
   const [isEditLeatherStockModalOpen, setIsEditLeatherStockModalOpen] = useState(false);
   const [itemToEditLeather, setItemToEditLeather] = useState<LeatherInventoryItem | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [deleteShoeTarget, setDeleteShoeTarget] = useState<InventoryItem | null>(null);
+  const [deleteLeatherTarget, setDeleteLeatherTarget] = useState<LeatherInventoryItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     // Kunci scroll saat sidebar terbuka di mobile
@@ -102,14 +106,21 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
     setIsEditShoeStockModalOpen(true);
   };
 
-  const handleDeleteShoeStockRequest = async (item: InventoryItem) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus stok ${item.shoeType} No. ${item.size} (${item.quantity} unit) secara permanen? Aksi ini tidak dapat dibatalkan.`)) {
-        try {
-            await api.deleteShoeStock(item.id);
-            reloadData();
-        } catch (e) {
-            alert(e instanceof Error ? e.message : 'Gagal menghapus stok.');
-        }
+  const handleDeleteShoeStockRequest = (item: InventoryItem) => {
+    setDeleteShoeTarget(item);
+  };
+
+  const confirmDeleteShoe = async () => {
+    if (!deleteShoeTarget) return;
+    try {
+      setIsDeleting(true);
+      await api.deleteShoeStock(deleteShoeTarget.id);
+      setDeleteShoeTarget(null);
+      reloadData();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Gagal menghapus stok.');
+    } finally {
+      setIsDeleting(false);
     }
   };
   
@@ -118,14 +129,21 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
     setIsEditLeatherStockModalOpen(true);
   };
 
-  const handleDeleteLeatherStockRequest = async (item: LeatherInventoryItem) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus stok ${item.name} dari supplier ${item.supplier} (${item.quantity} kaki) secara permanen? Aksi ini tidak dapat dibatalkan.`)) {
-        try {
-            await api.deleteLeatherStockByItemId(item.id);
-            reloadData();
-        } catch (e) {
-            alert(e instanceof Error ? e.message : 'Gagal menghapus stok.');
-        }
+  const handleDeleteLeatherStockRequest = (item: LeatherInventoryItem) => {
+    setDeleteLeatherTarget(item);
+  };
+
+  const confirmDeleteLeather = async () => {
+    if (!deleteLeatherTarget) return;
+    try {
+      setIsDeleting(true);
+      await api.deleteLeatherStockByItemId(deleteLeatherTarget.id);
+      setDeleteLeatherTarget(null);
+      reloadData();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Gagal menghapus stok.');
+    } finally {
+      setIsDeleting(false);
     }
   };
   
@@ -183,6 +201,30 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
       {isReturnLeatherModalOpen && (<ReturnLeatherModal leatherMasters={data.leatherMasters} onClose={() => setIsReturnLeatherModalOpen(false)} onStockReturned={() => { reloadData(); setIsReturnLeatherModalOpen(false); }} />)}
       {isEditShoeStockModalOpen && itemToEditShoe && (<EditShoeStockModal item={itemToEditShoe} onClose={() => { setIsEditShoeStockModalOpen(false); setItemToEditShoe(null); }} onStockUpdated={() => { reloadData(); setIsEditShoeStockModalOpen(false); setItemToEditShoe(null); }} />)}
       {isEditLeatherStockModalOpen && itemToEditLeather && (<EditLeatherStockModal item={itemToEditLeather} onClose={() => { setIsEditLeatherStockModalOpen(false); setItemToEditLeather(null); }} onStockUpdated={() => { reloadData(); setIsEditLeatherStockModalOpen(false); setItemToEditLeather(null); }} />)}
+
+      {deleteShoeTarget && (
+        <Modal title="Konfirmasi Hapus Stok" onClose={() => setDeleteShoeTarget(null)}>
+          <div className="space-y-4">
+            <p className="text-slate-300">Hapus stok <span className="font-semibold text-white">{deleteShoeTarget.shoeType} No. {deleteShoeTarget.size}</span> sejumlah <span className="font-semibold text-white">{deleteShoeTarget.quantity}</span> unit? Aksi ini tidak dapat dibatalkan.</p>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setDeleteShoeTarget(null)} className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-600 hover:bg-slate-500 rounded-md">Batal</button>
+              <button type="button" onClick={confirmDeleteShoe} disabled={isDeleting} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-60">{isDeleting ? 'Menghapus...' : 'Hapus'}</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {deleteLeatherTarget && (
+        <Modal title="Konfirmasi Hapus Stok Kulit" onClose={() => setDeleteLeatherTarget(null)}>
+          <div className="space-y-4">
+            <p className="text-slate-300">Hapus stok kulit <span className="font-semibold text-white">{deleteLeatherTarget.name}</span> (Supplier: <span className="font-semibold text-white">{deleteLeatherTarget.supplier}</span>) sejumlah <span className="font-semibold text-white">{deleteLeatherTarget.quantity}</span> kaki? Aksi ini tidak dapat dibatalkan.</p>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setDeleteLeatherTarget(null)} className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-600 hover:bg-slate-500 rounded-md">Batal</button>
+              <button type="button" onClick={confirmDeleteLeather} disabled={isDeleting} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-60">{isDeleting ? 'Menghapus...' : 'Hapus'}</button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
