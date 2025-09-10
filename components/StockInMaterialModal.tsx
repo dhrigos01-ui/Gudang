@@ -18,6 +18,12 @@ export const StockInMaterialModal: React.FC<StockInMaterialModalProps> = ({ onCl
   const [quantity, setQuantity] = useState('');
   const [sourceType, setSourceType] = useState<'pabrik' | 'maklun'>('pabrik');
   const [sourceName, setSourceName] = useState('');
+  const [entryDate, setEntryDate] = useState(() => {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const pad = (n: number) => `${n}`.padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  });
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +44,7 @@ export const StockInMaterialModal: React.FC<StockInMaterialModalProps> = ({ onCl
     try {
       const source = sourceType === 'maklun' ? sourceName.trim() : 'Pabrik';
       // FIX: Call addLeatherStock as addMaterialStock does not exist, and pass master ID.
-      await api.addLeatherStock(selectedLeather.id, quantityNum, source);
+      await api.addLeatherStock(selectedLeather.id, quantityNum, source, entryDate);
       onStockAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
@@ -82,6 +88,18 @@ export const StockInMaterialModal: React.FC<StockInMaterialModalProps> = ({ onCl
               <span className="ml-2 text-sm text-slate-200">Maklun</span>
             </label>
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="entryDate" className="block text-sm font-medium text-slate-300">Tanggal Masuk</label>
+          <input
+            type="datetime-local"
+            id="entryDate"
+            value={entryDate}
+            onChange={(e) => setEntryDate(e.target.value)}
+            className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+            required
+          />
         </div>
 
         {sourceType === 'maklun' && (

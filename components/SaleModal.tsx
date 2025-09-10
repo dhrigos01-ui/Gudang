@@ -24,6 +24,12 @@ export const SaleModal: React.FC<SaleModalProps> = ({ inventory, onClose, onStoc
   const [selectedItemId, setSelectedItemId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [error, setError] = useState('');
+  const [pickupDate, setPickupDate] = useState(() => {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const pad = (n: number) => `${n}`.padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  });
   
   const availableItems = useMemo(() => {
     return inventory[WarehouseCategory.FINISHED_GOODS] || [];
@@ -84,7 +90,7 @@ export const SaleModal: React.FC<SaleModalProps> = ({ inventory, onClose, onStoc
     try {
       // Proses penjualan untuk setiap item
       for (const item of selectedItems) {
-        await api.sellStock(item.id, item.quantity, customerName);
+        await api.sellStock(item.id, item.quantity, customerName, pickupDate);
       }
       onStockSold();
     } catch (err) {
@@ -103,6 +109,18 @@ export const SaleModal: React.FC<SaleModalProps> = ({ inventory, onClose, onStoc
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
             placeholder="Masukkan nama pembeli"
+            className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="pickupDate" className="block text-sm font-medium text-slate-300">Tanggal Pengambilan</label>
+          <input
+            type="datetime-local"
+            id="pickupDate"
+            value={pickupDate}
+            onChange={(e) => setPickupDate(e.target.value)}
             className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
             required
           />

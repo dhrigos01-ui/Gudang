@@ -5,7 +5,7 @@ import { UserRole, WarehouseCategory, TransactionType } from '../../../types';
 import { PrismaClient } from '@prisma/client';
 
 export default protect(async (req, res) => {
-    const { operation, itemId, leatherMasterId, quantity, supplier, returneeName, notes, releasedTo } = req.body;
+    const { operation, itemId, leatherMasterId, quantity, supplier, returneeName, notes, releasedTo, date } = req.body;
 
     try {
         await prisma.$transaction(async (tx: PrismaClient) => {
@@ -28,7 +28,7 @@ export default protect(async (req, res) => {
                         });
                     }
                     await tx.transaction.create({
-                        data: { type: TransactionType.IN, leatherName: leatherMaster.name, quantity, warehouse: WarehouseCategory.LEATHER, source: supplier }
+                        data: { type: TransactionType.IN, leatherName: leatherMaster.name, quantity, warehouse: WarehouseCategory.LEATHER, source: supplier, ...(date ? { date: new Date(date) } : {}) }
                     });
                     break;
                 

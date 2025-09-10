@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Modal } from './Modal';
 import { WarehouseCategory, ShoeMaster, MaklunMaster } from '../types';
 import { WAREHOUSE_NAMES } from '../constants';
@@ -15,11 +15,30 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
   const [selectedShoeType, setSelectedShoeType] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState('');
-  const [warehouse, setWarehouse] = useState<WarehouseCategory>(WarehouseCategory.WIP);
+  const [warehouse, setWarehouse] = useState<WarehouseCategory | ''>('');
   const [sourceType, setSourceType] = useState<'pabrik' | 'maklun'>('pabrik');
   const [sourceName, setSourceName] = useState('');
+  const [entryDate, setEntryDate] = useState(() => {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const pad = (n: number) => `${n}`.padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Jika gudang bukan Upper (WIP), Molding (NEARLY_FINISHED), atau Stok Gudang (FINISHED_GOODS), paksa sumber menjadi Pabrik
+  useEffect(() => {
+    if (
+      warehouse !== WarehouseCategory.WIP &&
+      warehouse !== WarehouseCategory.NEARLY_FINISHED &&
+      warehouse !== WarehouseCategory.FINISHED_GOODS &&
+      sourceType === 'maklun'
+    ) {
+      setSourceType('pabrik');
+      setSourceName('');
+    }
+  }, [warehouse, sourceType]);
 
   const availableSizes = useMemo(() => {
     const master = shoeMasters.find(m => m.shoeType === selectedShoeType);
@@ -43,6 +62,11 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
       setIsLoading(false);
       return;
     }
+    if (!warehouse) {
+      setError('Silakan pilih jenis gudang.');
+      setIsLoading(false);
+      return;
+    }
     if (sourceType === 'maklun' && !sourceName.trim()) {
       setError('Nama sumber Maklun harus dipilih.');
       setIsLoading(false);
@@ -51,7 +75,7 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
     
     try {
       const source = sourceType === 'maklun' ? sourceName.trim() : 'Pabrik';
-      await api.addStock({ shoeType: selectedShoeType, size: sizeNum }, quantityNum, warehouse, source);
+      await api.addStock({ shoeType: selectedShoeType, size: sizeNum }, quantityNum, warehouse as WarehouseCategory, source, entryDate);
       onStockAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
@@ -78,6 +102,17 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
             ))}
           </select>
         </div>
+        <div>
+          <label htmlFor="entryDate" className="block text-sm font-medium text-slate-300">Tanggal Masuk</label>
+          <input
+            type="datetime-local"
+            id="entryDate"
+            value={entryDate}
+            onChange={(e) => setEntryDate(e.target.value)}
+            className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+            required
+          />
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="size" className="block text-sm font-medium text-slate-300">Nomor</label>
@@ -102,29 +137,40 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
         </div>
         <div>
           <label htmlFor="warehouse" className="block text-sm font-medium text-slate-300">Masukkan ke Gudang</label>
-          <select id="warehouse" value={warehouse} onChange={(e) => setWarehouse(e.target.value as WarehouseCategory)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+          <select id="warehouse" value={warehouse} onChange={(e) => setWarehouse(e.target.value as WarehouseCategory | '')} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" required>
+            <option value="" disabled>-- Pilih jenis gudang --</option>
             {Object.values(WarehouseCategory).filter(v => v !== 'leather').map(key => (
               <option key={key} value={key}>{WAREHOUSE_NAMES[key]}</option>
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-300">Sumber Stok</label>
-          <div className="mt-2 flex gap-x-4">
-            <label className="flex items-center">
-              <input type="radio" name="sourceType" value="pabrik" checked={sourceType === 'pabrik'} onChange={() => setSourceType('pabrik')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
-              <span className="ml-2 text-sm text-slate-200">Pabrik</span>
-            </label>
-            <label className="flex items-center">
-              <input type="radio" name="sourceType" value="maklun" checked={sourceType === 'maklun'} onChange={() => setSourceType('maklun')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
-              <span className="ml-2 text-sm text-slate-200">Maklun</span>
-            </label>
-          </div>
-        </div>
-
-        {sourceType === 'maklun' && (
+        {warehouse && (
           <div>
-            <label htmlFor="sourceName" className="block text-sm font-medium text-slate-300">Nama Sumber (Maklun)</label>
+            <label className="block text-sm font-medium text-slate-300">Sumber Stok</label>
+            <div className="mt-2 flex gap-x-4">
+              <label className="flex items-center">
+                <input type="radio" name="sourceType" value="pabrik" checked={sourceType === 'pabrik'} onChange={() => setSourceType('pabrik')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
+                <span className="ml-2 text-sm text-slate-200">Pabrik</span>
+              </label>
+              {(warehouse === WarehouseCategory.WIP || warehouse === WarehouseCategory.NEARLY_FINISHED || warehouse === WarehouseCategory.FINISHED_GOODS) && (
+                <label className="flex items-center">
+                  <input type="radio" name="sourceType" value="maklun" checked={sourceType === 'maklun'} onChange={() => setSourceType('maklun')} className="h-4 w-4 text-cyan-600 border-gray-300 focus:ring-cyan-500" />
+                  <span className="ml-2 text-sm text-slate-200">
+                    {warehouse === WarehouseCategory.NEARLY_FINISHED
+                      ? 'Siapa yang mengerjakan'
+                      : warehouse === WarehouseCategory.FINISHED_GOODS
+                      ? 'Maklun Sepatu tempel'
+                      : 'Maklun'}
+                  </span>
+                </label>
+              )}
+            </div>
+          </div>
+        )}
+
+        {sourceType === 'maklun' && (warehouse === WarehouseCategory.WIP || warehouse === WarehouseCategory.NEARLY_FINISHED || warehouse === WarehouseCategory.FINISHED_GOODS) && (
+          <div>
+            <label htmlFor="sourceName" className="block text-sm font-medium text-slate-300">{warehouse === WarehouseCategory.NEARLY_FINISHED ? 'Siapa yang mengerjakan' : 'Nama Sumber (Maklun)'}</label>
              <select 
               id="sourceName" 
               value={sourceName} 
@@ -132,7 +178,7 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
               className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
               required
             >
-              <option value="" disabled>-- Pilih Sumber Maklun --</option>
+              <option value="" disabled>-- Pilih --</option>
               {maklunMasters.map(master => (
                 <option key={master.id} value={master.name}>{master.name}</option>
               ))}

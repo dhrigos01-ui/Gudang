@@ -14,6 +14,12 @@ export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClos
   const [selectedLeatherId, setSelectedLeatherId] = useState('');
   const [quantity, setQuantity] = useState('');
   const [supplier, setSupplier] = useState('');
+  const [entryDate, setEntryDate] = useState(() => {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const pad = (n: number) => `${n}`.padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  });
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +40,7 @@ export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClos
     try {
       // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
       // Pass the leather master ID instead of the full object.
-      await api.addLeatherStock(selectedLeather.id, quantityNum, supplier.trim());
+      await api.addLeatherStock(selectedLeather.id, quantityNum, supplier.trim(), entryDate);
       onStockAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
@@ -69,6 +75,17 @@ export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClos
               <label htmlFor="supplier" className="block text-sm font-medium text-slate-300">Nama Supplier</label>
               <input type="text" id="supplier" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" placeholder="Contoh: CV Kulit Jaya" required />
             </div>
+        </div>
+        <div>
+          <label htmlFor="entryDate" className="block text-sm font-medium text-slate-300">Tanggal Masuk</label>
+          <input
+            type="datetime-local"
+            id="entryDate"
+            value={entryDate}
+            onChange={(e) => setEntryDate(e.target.value)}
+            className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+            required
+          />
         </div>
         
         {error && <p className="text-red-400 text-sm">{error}</p>}

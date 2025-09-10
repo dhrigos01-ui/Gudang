@@ -11,7 +11,7 @@ const transferFlow: Partial<Record<WarehouseCategory, WarehouseCategory>> = {
 };
 
 export default protect(async (req, res) => {
-    const { operation, itemId, shoe, quantity, warehouse, source, fromWarehouse, releasedTo, customerName, destination } = req.body;
+    const { operation, itemId, shoe, quantity, warehouse, source, fromWarehouse, releasedTo, customerName, destination, date } = req.body;
 
     try {
         await prisma.$transaction(async (tx: PrismaClient) => {
@@ -35,7 +35,7 @@ export default protect(async (req, res) => {
                         });
                     }
                     await tx.transaction.create({
-                        data: { type: TransactionType.IN, shoeType: shoe.shoeType, size: shoe.size, quantity: quantity, warehouse: warehouse, source: source }
+                        data: { type: TransactionType.IN, shoeType: shoe.shoeType, size: shoe.size, quantity: quantity, warehouse: warehouse, source: source, ...(date ? { date: new Date(date) } : {}) }
                     });
                     break;
 
@@ -52,7 +52,7 @@ export default protect(async (req, res) => {
                         data: { quantity: { decrement: quantity } }
                     });
                     await tx.transaction.create({
-                        data: { type: TransactionType.OUT, shoeType: shoeMasterSell.shoeType, size: itemToSell.size, quantity: quantity, warehouse: WarehouseCategory.FINISHED_GOODS, notes: customerName ? `Penjualan ke: ${customerName}` : "Penjualan" }
+                        data: { type: TransactionType.OUT, shoeType: shoeMasterSell.shoeType, size: itemToSell.size, quantity: quantity, warehouse: WarehouseCategory.FINISHED_GOODS, notes: customerName ? `Penjualan ke: ${customerName}` : "Penjualan", ...(date ? { date: new Date(date) } : {}) }
                     });
                     break;
                 
