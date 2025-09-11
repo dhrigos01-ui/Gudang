@@ -67,9 +67,42 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
   const [deleteLeatherTarget, setDeleteLeatherTarget] = useState<LeatherInventoryItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Inisialisasi: pakai localStorage jika ada, kalau tidak buka default di desktop
   useEffect(() => {
-    // Kunci scroll saat sidebar terbuka di mobile
-    if (isSidebarOpen) {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarOpen');
+      if (saved !== null) {
+        setIsSidebarOpen(saved === 'true');
+      } else {
+        const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+        setIsSidebarOpen(isDesktop);
+      }
+    }
+  }, []);
+
+  // Persist state ke localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarOpen', String(isSidebarOpen));
+    }
+  }, [isSidebarOpen]);
+
+  const isMobileScreen = () => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 767.98px)').matches;
+  };
+
+  const closeSidebarIfMobile = () => {
+    if (isMobileScreen()) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  // Kunci scroll hanya di mobile saat sidebar terbuka
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isMobile = window.matchMedia('(max-width: 767.98px)').matches;
+    if (isMobile && isSidebarOpen) {
       document.body.classList.add('overflow-hidden');
     } else {
       document.body.classList.remove('overflow-hidden');
@@ -182,12 +215,18 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
-      <Sidebar activePage={page} setPage={(p) => { setPage(p); setIsSidebarOpen(false); }} onAddStock={() => { setIsStockInModalOpen(true); setIsSidebarOpen(false); }} onAddLeather={() => { setIsStockInLeatherModalOpen(true); setIsSidebarOpen(false); }} onRemoveStock={() => { setIsStockOutGeneralModalOpen(true); setIsSidebarOpen(false); }} onOpenTransfer={() => { setIsSaleModalOpen(true); setIsSidebarOpen(false); }} onReturnLeather={() => { setIsReturnLeatherModalOpen(true); setIsSidebarOpen(false); }} currentUser={currentUser} onLogout={onLogout} isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(v => !v)} />
+      <Sidebar activePage={page} setPage={(p) => { setPage(p); closeSidebarIfMobile(); }} onAddStock={() => { setIsStockInModalOpen(true); closeSidebarIfMobile(); }} onAddLeather={() => { setIsStockInLeatherModalOpen(true); closeSidebarIfMobile(); }} onRemoveStock={() => { setIsStockOutGeneralModalOpen(true); closeSidebarIfMobile(); }} onOpenTransfer={() => { setIsSaleModalOpen(true); closeSidebarIfMobile(); }} onReturnLeather={() => { setIsReturnLeatherModalOpen(true); closeSidebarIfMobile(); }} currentUser={currentUser} onLogout={onLogout} isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(v => !v)} />
       {/* Topbar */}
       <div className={`fixed top-0 left-0 ${isSidebarOpen ? 'md:left-64' : 'md:left-0'} right-0 z-30 h-16 bg-slate-800/80 backdrop-blur border-b border-slate-700 px-3 shadow-sm`}>
         <div className="h-full flex items-center justify-between">
           <button
-            onClick={() => setIsSidebarOpen(v => !v)}
+            onClick={() => {
+              if (isMobileScreen()) {
+                setIsSidebarOpen(v => !v);
+              } else {
+                setIsSidebarOpen(true);
+              }
+            }}
             className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-sm text-white"
             aria-label="Buka menu"
             title="Menu"
