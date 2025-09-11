@@ -145,7 +145,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
       </div>
 
       {/* Filter Panel */}
-      <div className="mb-6 p-3 sm:p-4 bg-slate-900/50 border border-slate-700 rounded-lg">
+      <div className="mb-4 p-3 sm:p-4 bg-slate-900/50 border border-slate-700 rounded-lg sticky top-0 z-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div>
             <label htmlFor="startDate" className="block text-sm font-medium text-slate-300 mb-1">Dari Tanggal</label>
@@ -185,9 +185,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
         </div>
       </div>
 
-       <div className="overflow-x-auto -mx-2 sm:mx-0">
+       <div className="overflow-x-auto overflow-y-auto max-h-[65vh] -mx-2 sm:mx-0">
         <table className="min-w-full divide-y divide-slate-700 text-sm">
-          <thead className="bg-slate-800">
+          <thead className="bg-slate-800 sticky top-0 z-10">
             <tr>
               <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                 <button onClick={toggleSortOrder} className="flex items-center gap-1 hover:text-white transition-colors">

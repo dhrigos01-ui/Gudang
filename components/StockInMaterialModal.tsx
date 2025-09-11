@@ -29,7 +29,8 @@ export const StockInMaterialModal: React.FC<StockInMaterialModalProps> = ({ onCl
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const quantityNum = parseInt(quantity, 10);
+    const normalizedQuantity = quantity.replace(/\./g, '').replace(',', '.').trim();
+    const quantityNum = parseFloat(normalizedQuantity);
     const selectedLeather = leatherMasters.find(m => m.id === selectedLeatherId);
 
     if (!selectedLeather || isNaN(quantityNum) || quantityNum <= 0) {
@@ -72,7 +73,7 @@ export const StockInMaterialModal: React.FC<StockInMaterialModalProps> = ({ onCl
             </div>
             <div>
               <label htmlFor="quantity" className="block text-sm font-medium text-slate-300">Jumlah (kaki)</label>
-              <input type="number" id="quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" min="1" required />
+              <input type="text" inputMode="decimal" id="quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" placeholder="Contoh: 12,5" required />
             </div>
         </div>
         

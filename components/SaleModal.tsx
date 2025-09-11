@@ -159,7 +159,7 @@ export const SaleModal: React.FC<SaleModalProps> = ({ inventory, onClose, onStoc
         {selectedItems.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">Item yang akan dijual</label>
-            <div className="border border-slate-600 rounded-md bg-slate-800/50">
+            <div className="border border-slate-600 rounded-md bg-slate-800/50 max-h-64 overflow-y-auto pr-1">
               {selectedItems.map((item) => (
                 <div key={item.id} className="p-3 flex items-center justify-between border-b border-slate-600 last:border-b-0">
                   <div className="flex-1">

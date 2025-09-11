@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   );
 
   return (
-    <aside className={`fixed inset-y-0 left-0 w-64 bg-slate-800 flex flex-col h-full border-r border-slate-700 z-40 transform transition-transform duration-200 ease-in-out will-change-transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:flex-shrink-0`}>
+    <aside className={`fixed inset-y-0 left-0 w-64 bg-slate-800 flex flex-col h-full border-r border-slate-700 z-40 transform transition-transform duration-200 ease-in-out will-change-transform ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <div className="flex items-center space-x-3">
           <ShoeIcon className="h-8 w-8 text-cyan-400" />
@@ -82,8 +82,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button onClick={onToggle} className="md:hidden text-slate-400 hover:text-white">✕</button>
       </div>
 
-      <div className="p-2">
-        <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+      <div className="p-2 flex-1 overflow-y-auto">
+        <div className="space-y-1 pr-1">
           <p className="px-2 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</p>
           {mainNavItems.map(item => renderNavButton(item))}
           {isAdmin && (
@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      <div className="p-2 border-top border-slate-700">
+      <div className="mt-auto p-2 border-t border-slate-700">
         <div className="p-2">
             <p className="text-sm text-slate-400">Login sebagai: <span className="font-bold text-white">{currentUser.username} ({currentUser.role})</span></p>
             <button

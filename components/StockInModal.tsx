@@ -13,8 +13,7 @@ interface StockInModalProps {
 
 export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdded, shoeMasters, maklunMasters }) => {
   const [selectedShoeType, setSelectedShoeType] = useState('');
-  const [selectedSize, setSelectedSize] = useState('');
-  const [quantity, setQuantity] = useState('');
+  const [entries, setEntries] = useState<Array<{ size: string; quantity: string }>>([{ size: '', quantity: '' }]);
   const [warehouse, setWarehouse] = useState<WarehouseCategory | ''>('');
   const [sourceType, setSourceType] = useState<'pabrik' | 'maklun'>('pabrik');
   const [sourceName, setSourceName] = useState('');
@@ -47,18 +46,37 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
 
   const handleShoeTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedShoeType(e.target.value);
-    setSelectedSize(''); // Reset size selection when shoe type changes
+    setEntries([{ size: '', quantity: '' }]); // Reset entries when shoe type changes
+  };
+
+  const addEntryRow = () => {
+    setEntries(prev => [...prev, { size: '', quantity: '' }]);
+  };
+
+  const removeEntryRow = (index: number) => {
+    setEntries(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateEntry = (index: number, field: 'size' | 'quantity', value: string) => {
+    setEntries(prev => prev.map((row, i) => i === index ? { ...row, [field]: value } : row));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    const quantityNum = parseInt(quantity, 10);
-    const sizeNum = parseInt(selectedSize, 10);
+    if (!selectedShoeType) {
+      setError('Jenis sepatu harus dipilih.');
+      setIsLoading(false);
+      return;
+    }
 
-    if (!selectedShoeType || !selectedSize || isNaN(quantityNum) || quantityNum <= 0) {
-      setError('Semua field harus diisi dengan nilai yang valid.');
+    const parsedEntries = entries
+      .map(e => ({ sizeNum: parseInt(e.size, 10), qtyNum: parseInt(e.quantity, 10) }))
+      .filter(e => !isNaN(e.sizeNum) && !isNaN(e.qtyNum) && e.qtyNum > 0);
+
+    if (parsedEntries.length === 0) {
+      setError('Tambahkan minimal satu baris nomor dengan jumlah yang valid.');
       setIsLoading(false);
       return;
     }
@@ -75,7 +93,11 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
     
     try {
       const source = sourceType === 'maklun' ? sourceName.trim() : 'Pabrik';
-      await api.addStock({ shoeType: selectedShoeType, size: sizeNum }, quantityNum, warehouse as WarehouseCategory, source, entryDate);
+      await Promise.all(
+        parsedEntries.map(e =>
+          api.addStock({ shoeType: selectedShoeType, size: e.sizeNum }, e.qtyNum, warehouse as WarehouseCategory, source, entryDate)
+        )
+      );
       onStockAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
@@ -113,26 +135,37 @@ export const StockInModal: React.FC<StockInModalProps> = ({ onClose, onStockAdde
             required
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-3">
+          {entries.map((row, idx) => (
+            <div key={idx} className="grid grid-cols-2 gap-4 items-end">
+              <div>
+                <label htmlFor={`size-${idx}`} className="block text-sm font-medium text-slate-300">Nomor</label>
+                <select 
+                  id={`size-${idx}`}
+                  aria-label="Nomor"
+                  value={row.size}
+                  onChange={(e) => updateEntry(idx, 'size', e.target.value)} 
+                  className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-slate-800 disabled:text-slate-500"
+                  disabled={availableSizes.length === 0}
+                  required
+                >
+                  <option value="" disabled>-- Pilih Ukuran --</option>
+                  {availableSizes.map(size => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label htmlFor={`qty-${idx}`} className="block text-sm font-medium text-slate-300">Jumlah</label>
+                  <input id={`qty-${idx}`} aria-label="Jumlah" type="number" value={row.quantity} onChange={(e) => updateEntry(idx, 'quantity', e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" min="1" required />
+                </div>
+                <button type="button" onClick={() => removeEntryRow(idx)} className="h-10 mt-6 px-3 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500 rounded-md" disabled={entries.length === 1}>Hapus</button>
+              </div>
+            </div>
+          ))}
           <div>
-            <label htmlFor="size" className="block text-sm font-medium text-slate-300">Nomor</label>
-            <select 
-              id="size" 
-              value={selectedSize} 
-              onChange={(e) => setSelectedSize(e.target.value)} 
-              className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-slate-800 disabled:text-slate-500"
-              disabled={availableSizes.length === 0}
-              required
-            >
-              <option value="" disabled>-- Pilih Ukuran --</option>
-              {availableSizes.map(size => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="quantity" className="block text-sm font-medium text-slate-300">Jumlah</label>
-            <input type="number" id="quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" min="1" required />
+            <button type="button" onClick={addEntryRow} className="px-3 py-2 text-sm font-medium text-slate-200 bg-slate-700 hover:bg-slate-600 rounded-md" disabled={!selectedShoeType || availableSizes.length === 0}>Tambah Nomor</button>
           </div>
         </div>
         <div>

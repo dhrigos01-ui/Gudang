@@ -177,22 +177,37 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-slate-200 font-sans">
+    <div className={`flex min-h-screen bg-slate-900 text-slate-200 font-sans ${isSidebarOpen ? 'md:pl-64' : ''}`}>
       {/* Overlay untuk menutup sidebar di mobile */}
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
       <Sidebar activePage={page} setPage={(p) => { setPage(p); setIsSidebarOpen(false); }} onAddStock={() => { setIsStockInModalOpen(true); setIsSidebarOpen(false); }} onAddLeather={() => { setIsStockInLeatherModalOpen(true); setIsSidebarOpen(false); }} onRemoveStock={() => { setIsStockOutGeneralModalOpen(true); setIsSidebarOpen(false); }} onOpenTransfer={() => { setIsSaleModalOpen(true); setIsSidebarOpen(false); }} onReturnLeather={() => { setIsReturnLeatherModalOpen(true); setIsSidebarOpen(false); }} currentUser={currentUser} onLogout={onLogout} isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(v => !v)} />
       {/* Topbar */}
-      <div className="fixed top-0 left-0 right-0 z-30 h-14 bg-slate-800/80 backdrop-blur border-b border-slate-700 flex items-center px-3 shadow-sm md:hidden">
-        <button onClick={() => setIsSidebarOpen(true)} className="md:hidden px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm" aria-label="Buka menu">Menu</button>
-        <div className="flex-1 text-center">
-          <span className="text-white font-semibold">Gudang Sepatu</span>
+      <div className={`fixed top-0 left-0 ${isSidebarOpen ? 'md:left-64' : 'md:left-0'} right-0 z-30 h-16 bg-slate-800/80 backdrop-blur border-b border-slate-700 px-3 shadow-sm`}>
+        <div className="h-full flex items-center justify-between">
+          <button
+            onClick={() => setIsSidebarOpen(v => !v)}
+            className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-sm text-white"
+            aria-label="Buka menu"
+            title="Menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+              <path d="M3 6.75h18a.75.75 0 0 0 0-1.5H3a.75.75 0 0 0 0 1.5Zm0 6.75h18a.75.75 0 0 0 0-1.5H3a.75.75 0 0 0 0 1.5Zm0 6.75h18a.75.75 0 0 0 0-1.5H3a.75.75 0 0 0 0 1.5Z" />
+            </svg>
+          </button>
+          <div className="flex-1 text-center">
+            <span className="text-white font-semibold">Gudang Sepatu</span>
+          </div>
+          <div className="w-[42px]" />
         </div>
-      </div>
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto pt-20 md:pt-0">
-        {renderPage()}
-      </main>
+    </div>
+
+    {/* Tambahkan margin-top sesuai tinggi top bar */}
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto mt-14">
+      {renderPage()}
+    </main>
+
 
       {isStockInModalOpen && (<StockInModal shoeMasters={data.shoeMasters} maklunMasters={data.maklunMasters} onClose={() => setIsStockInModalOpen(false)} onStockAdded={() => { reloadData(); setIsStockInModalOpen(false); }} />)}
       {isStockInLeatherModalOpen && (<StockInLeatherModal leatherMasters={data.leatherMasters} onClose={() => setIsStockInLeatherModalOpen(false)} onStockAdded={() => { reloadData(); setIsStockInLeatherModalOpen(false); }} />)}
