@@ -11,8 +11,7 @@ interface StockInLeatherModalProps {
 }
 
 export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClose, onStockAdded, leatherMasters }) => {
-  const [selectedLeatherId, setSelectedLeatherId] = useState('');
-  const [quantity, setQuantity] = useState('');
+  const [entries, setEntries] = useState<Array<{ leatherId: string; quantity: string }>>([{ leatherId: '', quantity: '' }]);
   const [supplier, setSupplier] = useState('');
   const [entryDate, setEntryDate] = useState(() => {
     const now = new Date();
@@ -25,12 +24,12 @@ export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClos
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const normalizedQuantity = quantity.replace(/\./g, '').replace(',', '.').trim();
-    const quantityNum = parseFloat(normalizedQuantity);
-    const selectedLeather = leatherMasters.find(m => m.id === selectedLeatherId);
+    const parsedEntries = entries
+      .map(r => ({ leatherId: r.leatherId, qty: parseFloat(r.quantity.replace(/\./g, '').replace(',', '.').trim()) }))
+      .filter(r => r.leatherId && !isNaN(r.qty) && r.qty > 0);
 
-    if (!selectedLeather || isNaN(quantityNum) || quantityNum <= 0) {
-      setError('Jenis kulit dan jumlah harus diisi dengan nilai yang valid.');
+    if (parsedEntries.length === 0) {
+      setError('Tambahkan minimal satu baris Jenis Kulit dengan jumlah yang valid.');
       return;
     }
     if (!supplier.trim()) {
@@ -39,9 +38,9 @@ export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClos
     }
     
     try {
-      // FIX: The services/inventoryService.ts file is empty, using lib/api.ts instead for API calls.
-      // Pass the leather master ID instead of the full object.
-      await api.addLeatherStock(selectedLeather.id, quantityNum, supplier.trim(), entryDate);
+      await Promise.all(
+        parsedEntries.map(r => api.addLeatherStock(r.leatherId, r.qty, supplier.trim(), entryDate))
+      );
       onStockAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
@@ -50,43 +49,59 @@ export const StockInLeatherModal: React.FC<StockInLeatherModalProps> = ({ onClos
 
   return (
     <Modal title="Tambah Stok Kulit Masuk" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-            <label htmlFor="leatherId" className="block text-sm font-medium text-slate-300">Jenis Kulit</label>
-            <select 
-              id="leatherId" 
-              value={selectedLeatherId} 
-              onChange={(e) => setSelectedLeatherId(e.target.value)} 
-              className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-              required
-            >
-              <option value="" disabled>-- Pilih Jenis Kulit --</option>
-              {leatherMasters.map(master => (
-                <option key={master.id} value={master.id}>{master.name}</option>
-              ))}
-            </select>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Kiri: metadata */}
+          <div className="space-y-4 md:col-span-4">
             <div>
-              <label htmlFor="quantity" className="block text-sm font-medium text-slate-300">Jumlah (kaki)</label>
-              <input type="text" inputMode="decimal" id="quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" placeholder="Contoh: 12,5" required />
+              <label htmlFor="entryDate" className="block text-sm font-medium text-slate-300">Tanggal Masuk</label>
+              <input
+                type="datetime-local"
+                id="entryDate"
+                value={entryDate}
+                onChange={(e) => setEntryDate(e.target.value)}
+                className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                required
+              />
             </div>
             <div>
               <label htmlFor="supplier" className="block text-sm font-medium text-slate-300">Nama Supplier</label>
               <input type="text" id="supplier" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" placeholder="Contoh: CV Kulit Jaya" required />
             </div>
-        </div>
-        <div>
-          <label htmlFor="entryDate" className="block text-sm font-medium text-slate-300">Tanggal Masuk</label>
-          <input
-            type="datetime-local"
-            id="entryDate"
-            value={entryDate}
-            onChange={(e) => setEntryDate(e.target.value)}
-            className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-            required
-          />
+          </div>
+
+          {/* Kanan: input barang (multi rows) */}
+          <div className="space-y-3 md:col-span-8 max-h-[50vh] overflow-y-auto pr-1">
+            {entries.map((row, idx) => (
+              <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border border-slate-700 p-3 rounded-md bg-slate-800/40">
+                <div className="md:col-span-7">
+                  <label htmlFor={`leatherId-${idx}`} className="block text-sm font-medium text-slate-300">Jenis Kulit</label>
+                  <select 
+                    id={`leatherId-${idx}`}
+                    value={row.leatherId}
+                    onChange={(e) => setEntries(prev => prev.map((r, i) => i === idx ? { ...r, leatherId: e.target.value } : r))}
+                    className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                    required
+                  >
+                    <option value="" disabled>-- Pilih Jenis Kulit --</option>
+                    {leatherMasters.map(master => (
+                      <option key={master.id} value={master.id}>{master.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-3">
+                  <label htmlFor={`quantity-${idx}`} className="block text-sm font-medium text-slate-300">Jumlah (kaki)</label>
+                  <input type="text" inputMode="decimal" id={`quantity-${idx}`} value={row.quantity} onChange={(e) => setEntries(prev => prev.map((r, i) => i === idx ? { ...r, quantity: e.target.value } : r))} className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" placeholder="Contoh: 12,5" required />
+                </div>
+                <div className="md:col-span-2 flex justify-end">
+                  <button type="button" onClick={() => setEntries(prev => prev.filter((_, i) => i !== idx))} className="h-10 mt-6 px-3 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500 rounded-md" disabled={entries.length === 1}>Hapus</button>
+                </div>
+              </div>
+            ))}
+            <div>
+              <button type="button" onClick={() => setEntries(prev => [...prev, { leatherId: '', quantity: '' }])} className="px-3 py-2 text-sm font-medium text-slate-200 bg-slate-700 hover:bg-slate-600 rounded-md">Tambah Baris</button>
+            </div>
+          </div>
         </div>
         
         {error && <p className="text-red-400 text-sm">{error}</p>}

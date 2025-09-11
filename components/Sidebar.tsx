@@ -38,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'dashboard', label: 'Dashboard' },
     { id: WarehouseCategory.FINISHED_GOODS, label: 'Stok Gudang' },
     { id: WarehouseCategory.NEARLY_FINISHED, label: 'Stok Molding' },
+    { id: WarehouseCategory.FINISHING, label: 'Data Finishing' },
     { id: WarehouseCategory.WIP, label: 'Stok Upper' },
     { id: WarehouseCategory.LEATHER, label: 'Stok Kulit'},
     { id: 'transactions', label: 'Riwayat Histori' },

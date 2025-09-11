@@ -67,7 +67,7 @@ export default protect(async (req, res) => {
                     
                     const removeNotes = `Dikeluarkan ke: ${releasedTo}. Dari supplier: ${itemToRemove.supplier}.`;
                     await tx.transaction.create({
-                        data: { type: TransactionType.OUT, leatherName: itemToRemove.leatherMaster.name, quantity, warehouse: WarehouseCategory.LEATHER, notes: removeNotes }
+                        data: { type: TransactionType.OUT, leatherName: itemToRemove.leatherMaster.name, quantity, warehouse: WarehouseCategory.LEATHER, notes: removeNotes, ...(date ? { date: new Date(date) } : {}) }
                     });
                     break;
 

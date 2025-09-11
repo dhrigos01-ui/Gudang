@@ -2,6 +2,7 @@ export enum WarehouseCategory {
   FINISHED_GOODS = 'finished_goods',
   WIP = 'wip',
   NEARLY_FINISHED = 'nearly_finished',
+  FINISHING = 'finishing',
   LEATHER = 'leather',
 }
 
@@ -60,6 +61,7 @@ export interface AppData {
     [WarehouseCategory.FINISHED_GOODS]: InventoryItem[];
     [WarehouseCategory.WIP]: InventoryItem[];
     [WarehouseCategory.NEARLY_FINISHED]: InventoryItem[];
+    [WarehouseCategory.FINISHING]: InventoryItem[];
     [WarehouseCategory.LEATHER]: LeatherInventoryItem[];
   };
   transactions: Transaction[];

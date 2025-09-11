@@ -12,10 +12,30 @@ const getAuthHeaders = () => {
 
 const handleResponse = async (response: Response) => {
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Error: ${response.status}`);
+        // Coba baca error JSON, jika kosong fallback ke status text
+        const text = await response.text().catch(() => '');
+        try {
+            const errorData = text ? JSON.parse(text) : null;
+            throw new Error((errorData && errorData.message) || `Error: ${response.status}`);
+        } catch {
+            throw new Error(text || `Error: ${response.status}`);
+        }
     }
-    return response.json();
+    // Untuk 204 No Content atau body kosong, kembalikan objek kosong agar tidak melempar error JSON
+    const contentLength = response.headers.get('content-length');
+    if (response.status === 204 || contentLength === '0') {
+        return {} as any;
+    }
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        // Jika bukan JSON, kembalikan teks mentah
+        const text = await response.text();
+        return { message: text } as any;
+    }
+    // Normal JSON response
+    const text = await response.text();
+    if (!text) return {} as any;
+    return JSON.parse(text);
 };
 
 export const login = async (username: string, password: string): Promise<{ token: string; user: User }> => {
@@ -54,9 +74,9 @@ export const returnLeatherStock = (leatherMasterId: string, quantity: number, re
 
 export const sellStock = (itemId: string, quantityToSell: number, customerName?: string, date?: string) => fetch(`${API_BASE_URL}/inventory/shoe`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ itemId, quantity: quantityToSell, customerName, date, operation: 'sell' }) }).then(handleResponse);
 export const removeStock = (itemId: string, quantityToRemove: number, releasedTo: string) => fetch(`${API_BASE_URL}/inventory/shoe`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ itemId, quantity: quantityToRemove, releasedTo, operation: 'remove' }) }).then(handleResponse);
-export const removeLeatherStock = (itemId: string, quantityToRemove: number, releasedTo: string) => fetch(`${API_BASE_URL}/inventory/leather`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ itemId, quantity: quantityToRemove, releasedTo, operation: 'remove' }) }).then(handleResponse);
+export const removeLeatherStock = (itemId: string, quantityToRemove: number, releasedTo: string, date?: string) => fetch(`${API_BASE_URL}/inventory/leather`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ itemId, quantity: quantityToRemove, releasedTo, date, operation: 'remove' }) }).then(handleResponse);
 
-export const transferStock = (itemId: string, quantityToTransfer: number, fromWarehouse: WarehouseCategory, source: string, destination?: string) => fetch(`${API_BASE_URL}/inventory/shoe`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ itemId, quantity: quantityToTransfer, fromWarehouse, source, destination, operation: 'transfer' }) }).then(handleResponse);
+export const transferStock = (itemId: string, quantityToTransfer: number, fromWarehouse: WarehouseCategory, source: string, destination?: string, date?: string) => fetch(`${API_BASE_URL}/inventory/shoe`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ itemId, quantity: quantityToTransfer, fromWarehouse, source, destination, date, operation: 'transfer' }) }).then(handleResponse);
 
 export const updateShoeStockQuantity = (itemId: string, newQuantity: number) => fetch(`${API_BASE_URL}/inventory/shoe/${itemId}`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ newQuantity }) }).then(handleResponse);
 export const deleteShoeStock = (itemId: string) => fetch(`${API_BASE_URL}/inventory/shoe/${itemId}`, { method: 'DELETE', headers: getAuthHeaders() }).then(handleResponse);

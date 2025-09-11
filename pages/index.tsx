@@ -39,6 +39,7 @@ const initialAppData: AppData = {
     [WarehouseCategory.FINISHED_GOODS]: [],
     [WarehouseCategory.WIP]: [],
     [WarehouseCategory.NEARLY_FINISHED]: [],
+    [WarehouseCategory.FINISHING]: [],
     [WarehouseCategory.LEATHER]: [],
   },
   transactions: [],
@@ -205,7 +206,7 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
         return <LeatherWarehouseView items={data.inventory.leather} onEditRequest={handleEditLeatherStockRequest} onDeleteRequest={handleDeleteLeatherStockRequest} currentUser={currentUser} />;
       default:
         const warehouseCat = page as Exclude<WarehouseCategory, 'leather'>;
-        return <WarehouseView category={warehouseCat} items={data.inventory[warehouseCat] || []} onEditRequest={handleEditShoeStockRequest} onDeleteRequest={handleDeleteShoeStockRequest} currentUser={currentUser} />;
+        return <WarehouseView category={warehouseCat} items={data.inventory[warehouseCat] || []} onEditRequest={handleEditShoeStockRequest} onDeleteRequest={handleDeleteShoeStockRequest} currentUser={currentUser} onDataChanged={handleDataChanged} shoeMasters={data.shoeMasters} />;
     }
   };
 

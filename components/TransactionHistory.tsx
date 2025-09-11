@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Transaction, TransactionType, WarehouseCategory, Shoe } from '../types';
 import { WAREHOUSE_NAMES } from '../constants';
 import { Card } from './Card';
@@ -23,6 +23,11 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
     search: '',
     transactionType: '' as TransactionType | '' | 'RETURN',
   });
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(filters.search), 300);
+    return () => clearTimeout(t);
+  }, [filters.search]);
 
   const filteredAndSortedTransactions = useMemo(() => {
     let filtered = [...transactions];
@@ -50,8 +55,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
             filtered = filtered.filter(tx => tx.type === filters.transactionType);
         }
     }
-    if (filters.search.trim()) {
-        const lowerCaseSearch = filters.search.toLowerCase().trim();
+    if (debouncedSearch.trim()) {
+        const lowerCaseSearch = debouncedSearch.toLowerCase().trim();
         filtered = filtered.filter(tx => {
             const itemText = isShoe(tx.item)
                 ? `${tx.item.shoeType}`
@@ -72,7 +77,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
       }
       return dateB - dateA; // desc
     });
-  }, [transactions, sortOrder, filters]);
+  }, [transactions, sortOrder, filters.startDate, filters.endDate, filters.warehouse, filters.transactionType, debouncedSearch]);
   
   const toggleSortOrder = () => {
     setSortOrder(currentOrder => (currentOrder === 'desc' ? 'asc' : 'desc'));

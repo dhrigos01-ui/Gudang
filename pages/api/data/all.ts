@@ -29,6 +29,7 @@ export default protect(async (req, res) => {
                 [WarehouseCategory.FINISHED_GOODS]: [],
                 [WarehouseCategory.WIP]: [],
                 [WarehouseCategory.NEARLY_FINISHED]: [],
+                [WarehouseCategory.FINISHING]: [],
                 [WarehouseCategory.LEATHER]: [],
             },
             transactions: transactions.map((tx: Transaction) => ({

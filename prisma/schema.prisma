@@ -21,6 +21,7 @@ enum WarehouseCategory {
   finished_goods
   wip
   nearly_finished
+  finishing
   leather
 }
 

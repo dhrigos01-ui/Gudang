@@ -37,7 +37,7 @@ export default protect(async (req, res) => {
                         notes: `Penyesuaian Stok (Supplier: ${item.supplier})`
                     }
                 });
-            });
+            }, { timeout: 15000, maxWait: 15000 });
             res.status(200).json({ message: 'Kuantitas berhasil diperbarui.' });
             return;
         } catch (error) {
@@ -63,7 +63,7 @@ export default protect(async (req, res) => {
                         notes: `Penghapusan Stok (Supplier: ${item.supplier})`
                     }
                 });
-            });
+            }, { timeout: 15000, maxWait: 15000 });
             res.status(204).end();
             return;
         } catch (error) {

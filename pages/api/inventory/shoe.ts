@@ -7,7 +7,8 @@ import { PrismaClient } from '@prisma/client';
 
 const transferFlow: Partial<Record<WarehouseCategory, WarehouseCategory>> = {
     [WarehouseCategory.WIP]: WarehouseCategory.NEARLY_FINISHED,
-    [WarehouseCategory.NEARLY_FINISHED]: WarehouseCategory.FINISHED_GOODS,
+    [WarehouseCategory.NEARLY_FINISHED]: WarehouseCategory.FINISHING,
+    [WarehouseCategory.FINISHING]: WarehouseCategory.FINISHED_GOODS,
 };
 
 export default protect(async (req, res) => {
@@ -92,12 +93,12 @@ export default protect(async (req, res) => {
                     });
                     const outNotes = destination ? `Transfer ke ${WAREHOUSE_NAMES[toWarehouse]} - Tujuan: ${destination}` : `Transfer ke ${WAREHOUSE_NAMES[toWarehouse]}`;
                     await tx.transaction.create({
-                        data: { type: TransactionType.OUT, shoeType: shoeMasterTransfer.shoeType, size: itemToTransfer.size, quantity: quantity, warehouse: fromWarehouse, notes: outNotes }
+                        data: { type: TransactionType.OUT, shoeType: shoeMasterTransfer.shoeType, size: itemToTransfer.size, quantity: quantity, warehouse: fromWarehouse, notes: outNotes, ...(date ? { date: new Date(date) } : {}) }
                     });
 
                     // Increase/create in destination
                     const destStock = await tx.inventory.findUnique({
-                        where: { shoeMasterId_size_warehouse: { shoeMasterId: itemToTransfer.shoeMasterId, size: itemToTransfer.size, warehouse: toWarehouse } }
+                        where: { shoeMasterId_size_warehouse: { shoeMasterId: itemToTransfer.shoeMasterId, size: itemToTransfer.size, warehouse: toWarehouse as any } }
                     });
                     if (destStock) {
                         await tx.inventory.update({
@@ -106,12 +107,12 @@ export default protect(async (req, res) => {
                         });
                     } else {
                         await tx.inventory.create({
-                            data: { shoeMasterId: itemToTransfer.shoeMasterId, size: itemToTransfer.size, quantity: quantity, warehouse: toWarehouse }
+                            data: { shoeMasterId: itemToTransfer.shoeMasterId, size: itemToTransfer.size, quantity: quantity, warehouse: toWarehouse as any }
                         });
                     }
                     const inNotes = destination ? `Transfer dari ${WAREHOUSE_NAMES[fromWarehouse as WarehouseCategory]} - Tujuan: ${destination}` : `Transfer dari ${WAREHOUSE_NAMES[fromWarehouse as WarehouseCategory]}`;
                     await tx.transaction.create({
-                        data: { type: TransactionType.IN, shoeType: shoeMasterTransfer.shoeType, size: itemToTransfer.size, quantity: quantity, warehouse: toWarehouse, source: source, notes: inNotes }
+                        data: { type: TransactionType.IN, shoeType: shoeMasterTransfer.shoeType, size: itemToTransfer.size, quantity: quantity, warehouse: toWarehouse as any, source: source, notes: inNotes, ...(date ? { date: new Date(date) } : {}) }
                     });
                     break;
                 
@@ -120,7 +121,7 @@ export default protect(async (req, res) => {
             }
             // Hapus item jika kuantitasnya 0
             await tx.inventory.deleteMany({ where: { quantity: 0 }});
-        });
+        }, { timeout: 15000, maxWait: 15000 });
 
         res.status(200).json({ message: 'Operasi stok berhasil' });
     } catch (error) {
