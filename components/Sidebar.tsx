@@ -36,9 +36,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const mainNavItems: { id: Page; label: string }[] = [
     { id: 'dashboard', label: 'Dashboard' },
-    { id: WarehouseCategory.FINISHED_GOODS, label: 'Stok Gudang' },
+    { id: WarehouseCategory.FINISHED_GOODS, label: 'Stok Sepatu' },
+    // Tampilkan Data Finishing hanya untuk admin
+    ...(isAdmin ? ([{ id: WarehouseCategory.FINISHING, label: 'Data Finishing' }] as { id: Page; label: string }[]) : []),
     { id: WarehouseCategory.NEARLY_FINISHED, label: 'Stok Molding' },
-    { id: WarehouseCategory.FINISHING, label: 'Data Finishing' },
     { id: WarehouseCategory.WIP, label: 'Stok Upper' },
     { id: WarehouseCategory.LEATHER, label: 'Stok Kulit'},
     { id: 'transactions', label: 'Riwayat Histori' },

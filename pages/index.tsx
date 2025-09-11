@@ -204,7 +204,7 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
 
     switch (page) {
       case 'dashboard':
-        return <Dashboard inventory={data.inventory} setPage={setPage} />;
+        return <Dashboard inventory={data.inventory} setPage={setPage} currentUser={currentUser} />;
       case 'transactions':
         return <TransactionHistory transactions={data.transactions} />;
       case 'master_shoe':
@@ -233,11 +233,7 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
         <div className="h-full flex items-center justify-between">
           <button
             onClick={() => {
-              if (isMobileScreen()) {
-                setIsSidebarOpen(v => !v);
-              } else {
-                setIsSidebarOpen(true);
-              }
+              setIsSidebarOpen(v => !v);
             }}
             className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-sm text-white"
             aria-label="Buka menu"

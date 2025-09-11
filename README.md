@@ -1,20 +1,61 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Sistem Gudang Sepatu
 
-# Run and deploy your AI Studio app
+Aplikasi manajemen stok (Next.js + Prisma + PostgreSQL) untuk mengelola:
+- Stok Upper (WIP), Molding, Finishing, Stok Gudang (Barang Jadi)
+- Stok Kulit (kaki), Master Sepatu, Master Maklun, Riwayat Transaksi
 
-This contains everything you need to run your app locally.
+## Persiapan
 
-View your app in AI Studio: https://ai.studio/apps/drive/1YT8LzLhLPReiJ7Dd2ZcO8DATdSFr84hj
+Prasyarat:
+- Node.js 18+
+- PostgreSQL (DATABASE_URL di `.env`), Prisma
 
-## Run Locally
+Install dependensi:
+```bash
+npm install
+```
 
-**Prerequisites:**  Node.js
+Set environment di `.env` minimal:
+```
+DATABASE_URL="postgresql://user:password@host:5432/dbname?schema=public"
+JWT_SECRET="gantilah-ini"
+```
 
+Generate Prisma Client & jalankan dev:
+```bash
+npx prisma generate
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Fitur Utama
+- Tambah/transfer stok sepatu antar gudang (WIP → Molding → Finishing → Gudang)
+- Penjualan dari Stok Gudang
+- Stok Kulit: tambah, retur, barang keluar
+- Histori transaksi lengkap (IN/OUT) dengan tanggal custom
+- Master: Sepatu, Kulit, Maklun
+- Role: ADMIN (penuh), USER (tanpa Data Finishing)
+
+## Backup & Restore DB
+Scripts tersedia di folder `scripts/` (butuh `pg_dump`/`psql`).
+
+Backup (Windows):
+```powershell
+npm run backup:db:win
+```
+Restore (Windows):
+```powershell
+npm run restore:db:win -- -FilePath .\backups\backup_YYYYMMDD_HHMMSS.sql
+```
+Backup (Linux/Mac):
+```bash
+npm run backup:db
+```
+Restore (Linux/Mac):
+```bash
+npm run restore:db -- ./backups/backup_YYYYMMDD_HHMMSS.sql
+```
+
+## Catatan
+- Token login auto-refresh via refresh token (cookie HttpOnly) saat kadaluarsa.
+- Angka stok kulit ditampilkan 2 desimal (truncated).
+- Tombol mata di login untuk lihat/sembunyi password.

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import type { AppData, Page, WarehouseCategory } from '../types';
+import type { AppData, Page, WarehouseCategory, User } from '../types';
+import { UserRole } from '../types';
 import { WAREHOUSE_NAMES } from '../constants';
 import { Card } from './Card';
 import { BoxIcon } from './icons/BoxIcon';
@@ -8,11 +9,15 @@ import { BoxIcon } from './icons/BoxIcon';
 interface DashboardProps {
   inventory: AppData['inventory'];
   setPage: (page: Page) => void;
+  currentUser?: User;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ inventory, setPage }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ inventory, setPage, currentUser }) => {
   
-  const warehouseKeys = Object.keys(inventory) as WarehouseCategory[];
+  let warehouseKeys = Object.keys(inventory) as WarehouseCategory[];
+  if (currentUser && currentUser.role === UserRole.USER) {
+    warehouseKeys = warehouseKeys.filter(k => k !== 'finishing');
+  }
 
   const getTotalStock = (category: WarehouseCategory): number => {
     // Sum quantities; for leather, avoid FP tails

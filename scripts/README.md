@@ -1,55 +1,89 @@
-# User Seeder
+# Scripts
 
-Script ini digunakan untuk membuat user default dalam sistem gudang sepatu.
+Dokumentasi singkat untuk script pendukung (seeding user, backup, dan restore database).
 
-## User yang akan dibuat:
+## 1) User Seeder
 
-### Admin
-- **Username**: `admin`
-- **Password**: `adminTJA`
-- **Role**: `ADMIN`
+Membuat user default dalam sistem gudang sepatu.
 
-### Users
-- **Username**: `user1`
-- **Password**: `userTJA1`
-- **Role**: `USER`
+### User yang akan dibuat
 
-- **Username**: `user2`
-- **Password**: `userTJA2`
-- **Role**: `USER`
+Admin:
+- Username: `admin`
+- Password: `adminTJA`
+- Role: `ADMIN`
 
-- **Username**: `user3`
-- **Password**: `userTJA3`
-- **Role**: `USER`
+Users:
+- `user1` / `userTJA1` (USER)
+- `user2` / `userTJA2` (USER)
+- `user3` / `userTJA3` (USER)
 
-## Cara Menjalankan Seeder
+### Cara Menjalankan
 
-### Metode 1: Menggunakan npm script
+Metode 1 - npm script:
 ```bash
 npm run seed-users
 ```
 
-### Metode 2: Menggunakan API endpoint
+Metode 2 - API endpoint:
 ```bash
 curl -X POST http://localhost:3000/api/seed-users
 ```
 
-### Metode 3: Menjalankan script langsung
+Metode 3 - node langsung:
 ```bash
 node scripts/seed-users.js
 ```
 
-## Catatan
-
+Catatan:
 - Script akan menghapus semua user yang sudah ada sebelum membuat user baru
-- Password akan di-hash menggunakan bcrypt dengan salt rounds 10
-- Pastikan database sudah terhubung dan Prisma client sudah di-generate
-- Pastikan environment variables sudah di-set dengan benar
+- Password di-hash (bcrypt, salt rounds 10)
+- Pastikan Prisma client sudah di-generate, env terisi benar
+
+## 2) Backup Database (PostgreSQL)
+
+Membuat dump SQL dari database yang dituju oleh `DATABASE_URL`.
+
+Butuh `pg_dump` di PATH.
+
+### Windows (PowerShell)
+```powershell
+npm run backup:db:win
+```
+Opsi output folder (default `backups`) dapat diubah dengan:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/backup-db.ps1 -OutDir .\my-backups
+```
+
+### Linux/Mac (bash)
+```bash
+npm run backup:db
+# atau
+npm run backup:db -- ./my-backups
+```
+
+Output: file `backups/backup_YYYYMMDD_HHMMSS.sql`
+
+## 3) Restore Database (PostgreSQL)
+
+Menjalankan ulang SQL dump ke database pada `DATABASE_URL`.
+
+Butuh `psql` di PATH.
+
+PERINGATAN: Proses restore akan menimpa data sesuai isi file SQL. Pastikan database tujuan sudah benar.
+
+### Windows (PowerShell)
+```powershell
+npm run restore:db:win -- -FilePath .\backups\backup_YYYYMMDD_HHMMSS.sql
+```
+
+### Linux/Mac (bash)
+```bash
+npm run restore:db -- ./backups/backup_YYYYMMDD_HHMMSS.sql
+```
 
 ## Troubleshooting
 
-Jika terjadi error, pastikan:
-1. Database sudah running
-2. Prisma client sudah di-generate (`npx prisma generate`)
-3. Environment variables sudah di-set
-4. Dependencies sudah di-install (`npm install`)
+1) `pg_dump`/`psql` tidak ditemukan: install PostgreSQL client dan tambahkan ke PATH.
+2) `DATABASE_URL` tidak ditemukan: isi `.env` atau export env sebelum menjalankan script.
+3) Permission error: pada Windows jalankan PowerShell sebagai Administrator atau set ExecutionPolicy Bypass pada perintah.

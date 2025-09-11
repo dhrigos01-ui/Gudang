@@ -8,7 +8,11 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
-    "seed-users": "node scripts/seed-users.js"
+    "seed-users": "node scripts/seed-users.js",
+    "backup:db": "bash scripts/backup-db.sh",
+    "backup:db:win": "powershell -ExecutionPolicy Bypass -File scripts/backup-db.ps1",
+    "restore:db": "bash scripts/restore-db.sh",
+    "restore:db:win": "powershell -ExecutionPolicy Bypass -File scripts/restore-db.ps1"
   },
   "dependencies": {
     "autoprefixer": "^10.4.21",
