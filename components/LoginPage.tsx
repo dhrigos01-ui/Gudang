@@ -83,7 +83,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                 title={showPassword ? 'Sembunyikan' : 'Tampilkan'}
               >
-                {showPassword ? 'Sembunyi' : 'Lihat'}
+                {/* Icon mata */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                  {showPassword ? (
+                    <path d="M3.53 2.47a.75.75 0 1 0-1.06 1.06l2.122 2.122C2.846 6.64 1.77 8.048 1.2 8.9a2.25 2.25 0 0 0 0 2.2C3.18 14.75 6.87 18 12 18c1.87 0 3.5-.39 4.9-1.04l3.57 3.57a.75.75 0 1 0 1.06-1.06l-18-18Zm7.27 9.39 1.34 1.34a2.25 2.25 0 0 1-1.34-1.34ZM12 6a6 6 0 0 1 6 6c0 .76-.14 1.49-.4 2.16l-1.2-1.2c.04-.31.06-.63.06-.96a4.5 4.5 0 0 0-4.5-4.5c-.33 0-.65.02-.96.06l-1.2-1.2C10.51 6.14 11.24 6 12 6Z" />
+                  ) : (
+                    <path d="M12 5c-5.13 0-8.82 3.25-10.8 6.2a2.25 2.25 0 0 0 0 2.2C3.18 16.75 6.87 20 12 20s8.82-3.25 10.8-6.2a2.25 2.25 0 0 0 0-2.2C20.82 8.25 17.13 5 12 5Zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" />
+                  )}
+                </svg>
               </button>
             </div>
           </div>

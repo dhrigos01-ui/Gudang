@@ -15,8 +15,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, setPage }) => {
   const warehouseKeys = Object.keys(inventory) as WarehouseCategory[];
 
   const getTotalStock = (category: WarehouseCategory): number => {
-    // For leather and shoes, sum up the quantities.
-    return inventory[category].reduce((sum, item) => sum + item.quantity, 0);
+    // Sum quantities; for leather, avoid FP tails
+    const total = inventory[category].reduce((sum, item) => sum + item.quantity, 0);
+    return category === 'leather' ? Math.floor(total * 100) / 100 : total;
   };
   
   const getUnitLabel = (category: WarehouseCategory): string => {
@@ -37,7 +38,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ inventory, setPage }) => {
               <h3 className="text-lg font-semibold text-white">{WAREHOUSE_NAMES[key]}</h3>
               <BoxIcon className="h-8 w-8 text-cyan-400" />
             </div>
-            <p className="mt-4 text-4xl font-bold text-white">{getTotalStock(key)}</p>
+            <p className="mt-4 text-4xl font-bold text-white">{key === 'leather' ? getTotalStock(key).toFixed(2) : getTotalStock(key)}</p>
             <p className="text-slate-400">{getUnitLabel(key)}</p>
           </Card>
         ))}

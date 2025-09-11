@@ -47,6 +47,15 @@ export const login = async (username: string, password: string): Promise<{ token
     return handleResponse(response);
 };
 
+export const refreshToken = async (): Promise<{ token: string }> => {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+    });
+    return handleResponse(response);
+};
+
 export const getData = async (): Promise<AppData> => {
     const response = await fetch(`${API_BASE_URL}/data/all`, { headers: getAuthHeaders() });
     return handleResponse(response);

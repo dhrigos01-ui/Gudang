@@ -120,7 +120,18 @@ export default function Home({ currentUser, onLogout }: HomeProps) {
     } catch(e) {
         console.error("Failed to reload data:", e);
         if (e instanceof Error && e.message.includes('401')) {
-            onLogout(); // If token is invalid, log out
+            try {
+              const { token } = await api.refreshToken();
+              if (token) {
+                localStorage.setItem('authToken', token);
+                const freshData = await api.getData();
+                setData(freshData);
+                return;
+              }
+            } catch (err) {
+              alert('Sesi berakhir. Silakan login kembali.');
+              onLogout();
+            }
         }
     }
   }, [onLogout]);

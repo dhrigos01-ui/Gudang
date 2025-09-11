@@ -32,8 +32,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const token = jwt.sign(
             { id: user.id, role: user.role as UserRole },
             process.env.JWT_SECRET!,
-            { expiresIn: '8h' }
+            { expiresIn: '1d' }
         );
+
+        // Issue refresh token (longer expiry) in HttpOnly cookie
+        const refreshToken = jwt.sign(
+            { id: user.id, role: user.role as UserRole },
+            process.env.JWT_SECRET!,
+            { expiresIn: '14d' }
+        );
+
+        const isProd = process.env.NODE_ENV === 'production';
+        const cookie = `refreshToken=${refreshToken}; HttpOnly; Path=/; Max-Age=${14 * 24 * 60 * 60}; SameSite=Lax; ${isProd ? 'Secure;' : ''}`;
+        (res as NextApiResponse).setHeader('Set-Cookie', cookie);
 
         const userResponse = {
             id: user.id,
