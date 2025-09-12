@@ -5,9 +5,22 @@ param(
     [string]$OutDir = "backups"
 )
 
-$envUrl = (Get-ChildItem Env:DATABASE_URL).Value
+# Load DATABASE_URL from .env if not in environment
+if (-not $env:DATABASE_URL) {
+    $root = Split-Path $PSScriptRoot -Parent
+    $dotenv = Join-Path $root ".env"
+    if (Test-Path $dotenv) {
+        $line = Select-String -Path $dotenv -Pattern '^[\s]*DATABASE_URL[\s]*=' | Select-Object -First 1
+        if ($line) {
+            $m = [regex]::Match($line.Line, '^[\s]*DATABASE_URL[\s]*=[\s]*"?(.+?)"?[\s]*$')
+            if ($m.Success) { $env:DATABASE_URL = $m.Groups[1].Value }
+        }
+    }
+}
+
+$envUrl = $env:DATABASE_URL
 if (-not $envUrl) {
-    Write-Error "DATABASE_URL env var tidak ditemukan. Set terlebih dahulu di .env"
+    Write-Error "DATABASE_URL tidak ditemukan. Set env atau isi .env terlebih dahulu"
     exit 1
 }
 

@@ -20,7 +20,8 @@ export const ReturnLeatherModal: React.FC<ReturnLeatherModalProps> = ({ leatherM
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const quantityNum = parseInt(quantity, 10);
+    const normalizedQuantity = quantity.replace(',', '.').trim();
+    const quantityNum = parseFloat(normalizedQuantity);
     const selectedMaster = leatherMasters.find(m => m.id === selectedLeatherMasterId);
 
     if (!selectedMaster) {
@@ -77,12 +78,14 @@ export const ReturnLeatherModal: React.FC<ReturnLeatherModalProps> = ({ leatherM
             <div>
                 <label htmlFor="quantity" className="block text-sm font-medium text-slate-300">Jumlah Diretur (kaki)</label>
                 <input 
-                    type="number" 
+                    type="text"
+                    inputMode="decimal"
                     id="quantity" 
                     value={quantity} 
                     onChange={(e) => setQuantity(e.target.value)} 
-                    min="1"
+                    placeholder="Contoh: 12,5"
                     className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" 
+                    required
                 />
             </div>
             <div>
