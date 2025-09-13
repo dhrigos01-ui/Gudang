@@ -17,7 +17,7 @@ export const EditLeatherStockModal: React.FC<EditLeatherStockModalProps> = ({ it
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const quantityNum = parseInt(quantity, 10);
+    const quantityNum = parseFloat(quantity.replace(',', '.'));
 
     if (isNaN(quantityNum) || quantityNum < 0) {
       setError('Jumlah harus berupa angka positif atau nol.');
@@ -44,15 +44,19 @@ export const EditLeatherStockModal: React.FC<EditLeatherStockModalProps> = ({ it
         <div>
           <label htmlFor="quantity" className="block text-sm font-medium text-slate-300">Jumlah Stok Baru (kaki)</label>
           <input 
-            type="number" 
+            type="text" 
             id="quantity" 
             value={quantity} 
-            onChange={(e) => setQuantity(e.target.value)}
-            min="0"
+            onChange={(e) => {
+              const value = e.target.value;
+              const validValue = value.replace(/[^0-9,.]/g, '');
+              setQuantity(validValue);
+            }}
+            placeholder="Contoh: 1,5 atau 2.5"
             className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500" 
             autoFocus
           />
-           <p className="text-xs text-slate-500 mt-1">Mengubah jumlah akan membuat transaksi "Penyesuaian Stok".</p>
+           <p className="text-xs text-slate-500 mt-1">Mengubah jumlah akan membuat transaksi "Penyesuaian Stok". Gunakan koma (,) atau titik (.) untuk desimal.</p>
         </div>
         
         {error && <p className="text-red-400 text-sm">{error}</p>}

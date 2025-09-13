@@ -45,7 +45,11 @@ export const StockOutGeneralModal: React.FC<StockOutGeneralModalProps> = ({ shoe
     e.preventDefault();
     setError('');
     const parsed = entries
-      .map(r => ({ itemId: r.itemId, qty: parseInt(r.quantity, 10), item: availableItems.find(it => it.id === r.itemId) as any }))
+      .map(r => ({ 
+        itemId: r.itemId, 
+        qty: stockType === 'leather' ? parseFloat(r.quantity.replace(',', '.')) : parseInt(r.quantity, 10), 
+        item: availableItems.find(it => it.id === r.itemId) as any 
+      }))
       .filter(r => r.item && !isNaN(r.qty) && r.qty > 0);
 
     if (parsed.length === 0) {
@@ -66,6 +70,20 @@ export const StockOutGeneralModal: React.FC<StockOutGeneralModalProps> = ({ shoe
     if (over) {
       setError(`Jumlah tidak boleh melebihi stok yang ada (${over.item.quantity}).`);
       return;
+    }
+
+    // Validasi khusus untuk stok kulit dengan desimal
+    if (stockType === 'leather') {
+      const invalidDecimal = entries.find(r => {
+        if (!r.quantity || !r.itemId) return false;
+        const quantityStr = r.quantity.replace(',', '.');
+        const qty = parseFloat(quantityStr);
+        return isNaN(qty) || qty <= 0 || !/^[0-9]+([,.][0-9]+)?$/.test(r.quantity);
+      });
+      if (invalidDecimal) {
+        setError('Format jumlah untuk stok kulit tidak valid. Gunakan angka dengan koma atau titik untuk desimal (contoh: 1,5 atau 2.5).');
+        return;
+      }
     }
 
     try {
@@ -244,15 +262,26 @@ export const StockOutGeneralModal: React.FC<StockOutGeneralModalProps> = ({ shoe
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-slate-300">Jumlah Keluar</label>
                       <input 
-                        type="number"
+                        type={stockType === 'leather' ? 'text' : 'number'}
                         value={row.quantity}
-                        onChange={(e) => setEntries(prev => prev.map((r, i) => i === idx ? { ...r, quantity: e.target.value } : r))}
-                        min="1"
-                        max={selected?.quantity}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Untuk stok kulit, hanya izinkan angka, koma, dan titik
+                          if (stockType === 'leather') {
+                            const validValue = value.replace(/[^0-9,.]/g, '');
+                            setEntries(prev => prev.map((r, i) => i === idx ? { ...r, quantity: validValue } : r));
+                          } else {
+                            setEntries(prev => prev.map((r, i) => i === idx ? { ...r, quantity: value } : r));
+                          }
+                        }}
+                        min={stockType === 'leather' ? undefined : "1"}
+                        max={stockType === 'leather' ? undefined : selected?.quantity}
                         disabled={!row.itemId}
                         aria-label="Jumlah Keluar"
+                        placeholder={stockType === 'leather' ? 'Contoh: 1,5 atau 2.5' : ''}
                         className="mt-1 block w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-slate-800"
                       />
+                      
                     </div>
                     <button type="button" onClick={() => removeEntryRow(idx)} className="h-10 mt-6 px-3 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500 rounded-md" disabled={entries.length === 1}>Hapus</button>
                   </div>
