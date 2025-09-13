@@ -9,7 +9,10 @@ export default protect(async (req, res) => {
 
     try {
         await prisma.$transaction(async (tx: PrismaClient) => {
-            const leatherMaster = await tx.leatherMaster.findUnique({ where: { id: leatherMasterId } });
+            let leatherMaster = null;
+            if (leatherMasterId) {
+                leatherMaster = await tx.leatherMaster.findUnique({ where: { id: leatherMasterId } });
+            }
             
             switch (operation) {
                 case 'add':
